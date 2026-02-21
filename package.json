@@ -1,6 +1,6 @@
 {
   "name": "weweb-crm-section",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "main": "ww-config.js",
   "weweb": {
