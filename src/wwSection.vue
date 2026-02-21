@@ -1,30 +1,29 @@
 <template>
   <div class="dashboard-layout" :style="cssVars">
     
-    <!-- TOPBAR (Full Width at Top) -->
+    <!-- TOPBAR -->
     <header class="topbar">
-      <!-- Universal Configurable Toggle Button -->
-      <button class="toggle-btn" @click="toggleSidebar">
-        <!-- Built-in configurable WeWeb icon -->
-        <wwEditorIcon 
-          :name="content.menuToggleIcon" 
-          :style="{ color: content.iconColor || 'inherit', fontSize: '24px' }" 
-        />
-      </button>
+      <!-- Universal Toggle Dropzone. No hardcoded padding, no inherent click, just pure drag and drop space. -->
+      <div class="toggle-wrapper">
+        <wwLayout path="menuToggleZone" direction="row" class="toggle-layout-zone" />
+      </div>
 
-      <!-- Main Topbar content (e.g Header Title, Profile, Actions) -->
+      <!-- Main Topbar content -->
       <wwLayout path="topbarZone" direction="row" class="topbar-layout-zone" />
     </header>
 
-    <!-- BOTTOM ROW (Sidebar + Content) -->
+    <!-- BOTTOM ROW -->
     <div class="row-wrapper">
       
       <!-- Mobile Overlay -->
-      <div class="sidebar-overlay" v-if="isMobile && isMobileOpen" @click="toggleSidebar"></div>
+      <div 
+        class="sidebar-overlay" 
+        v-if="isMobile && content.isMobileMenuOpen" 
+        @click="$emit('trigger-event', { name: 'overlayClick' })"
+      ></div>
 
       <!-- SIDEBAR -->
       <aside class="sidebar" :class="sidebarClasses">
-        <!-- Sidebar Dropzone: put custom elements inside -->
         <wwLayout path="sidebarZone" direction="column" class="sidebar-layout-zone" />
       </aside>
 
@@ -46,8 +45,6 @@ export default {
   data() {
     return {
       windowWidth: window.innerWidth,
-      isPcCollapsed: false,
-      isMobileOpen: false
     };
   },
   computed: {
@@ -56,8 +53,8 @@ export default {
     },
     sidebarClasses() {
       return {
-        'is-pc-collapsed': !this.isMobile && this.isPcCollapsed,
-        'is-mobile-open': this.isMobile && this.isMobileOpen
+        'is-pc-collapsed': !this.isMobile && this.content.isSidebarCollapsed,
+        'is-mobile-open': this.isMobile && this.content.isMobileMenuOpen
       };
     },
     cssVars() {
@@ -65,7 +62,12 @@ export default {
         '--sidebar-width': this.content.sidebarWidth || '280px',
         '--sidebar-collapsed-width': this.content.sidebarCollapsedWidth || '80px',
         '--topbar-height': this.content.topbarHeight || '70px',
-        '--content-padding': this.content.contentPadding || '32px',
+        
+        '--pad-top': this.content.contentPaddingTop || '32px',
+        '--pad-bottom': this.content.contentPaddingBottom || '32px',
+        '--pad-left': this.content.contentPaddingLeft || '32px',
+        '--pad-right': this.content.contentPaddingRight || '32px',
+        
         '--sidebar-bg': this.content.sidebarBgColor || '#ffffff',
         '--topbar-bg': this.content.topbarBgColor || '#ffffff',
         '--content-bg': this.content.contentBgColor || '#F3F4F6',
@@ -82,17 +84,6 @@ export default {
   methods: {
     handleResize() {
       this.windowWidth = window.innerWidth;
-      // Reset mobile state automatically when expanding window
-      if (!this.isMobile && this.isMobileOpen) {
-        this.isMobileOpen = false; 
-      }
-    },
-    toggleSidebar() {
-      if (this.isMobile) {
-        this.isMobileOpen = !this.isMobileOpen;
-      } else {
-        this.isPcCollapsed = !this.isPcCollapsed;
-      }
     }
   }
 };
@@ -114,46 +105,38 @@ export default {
 .topbar {
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: stretch;
   width: 100%;
   height: var(--topbar-height);
   background-color: var(--topbar-bg);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05); /* Minimal separator */
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   flex-shrink: 0;
   z-index: 20;
   position: relative;
-  padding-left: 16px; /* Space for the toggle button */
+  /* Reset padding entirely */
+  padding: 0; 
 }
 
-/* TOGGLE BUTTON: Now a standard sized icon button that reacts to clicks clearly */
-.toggle-btn {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  width: 44px;
-  height: 44px;
-  margin-right: 16px;
+/* TOGGLE Dropzone Wrapper */
+.toggle-wrapper {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
-  transition: background-color 0.2s ease;
-  flex-shrink: 0;
+  align-items: stretch;
 }
-.toggle-btn:hover {
-  background-color: rgba(0,0,0,0.05);
+
+.toggle-layout-zone {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  /* Removed arbitrary min-widths so it acts strictly like a native raw empty div */
 }
 
 /* TOPBAR LAYOUT */
 .topbar-layout-zone {
   flex-grow: 1;
   display: flex;
-  align-items: center;
+  flex-direction: row;
   height: 100%;
-  padding-right: 24px;
-}
-.topbar-layout-zone > * {
-  margin-right: 16px;
+  align-items: stretch;
 }
 
 /* BOTTOM SECTION (Sidebar + Content) */
@@ -168,6 +151,8 @@ export default {
 
 /* SIDEBAR */
 .sidebar {
+  display: flex;
+  flex-direction: column;
   width: var(--sidebar-width);
   height: 100%;
   background-color: var(--sidebar-bg);
@@ -176,10 +161,6 @@ export default {
   z-index: 10;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow-y: auto;
-  
-  /* CRITICAL FOR COLLAPSE EFFECT:
-     Prevents text wrapping and cleanly hides overflowing 
-     elements when sidebar shrinks to 80px */
   overflow-x: hidden; 
   white-space: nowrap; 
 }
@@ -193,10 +174,10 @@ export default {
   display: flex;
   flex-direction: column;
   width: 100%;
+  
+  /* THIS is what forces the children's 100% height configuration to stretch fully */
+  flex-grow: 1; 
   min-height: 100%;
-}
-.sidebar-layout-zone > * {
-  margin-bottom: 12px;
 }
 
 /* MAIN CONTENT */
@@ -205,7 +186,13 @@ export default {
   background-color: var(--content-bg);
   overflow-y: auto;
   overflow-x: hidden;
-  padding: var(--content-padding); /* Added padding variable */
+  
+  /* Explicit 4-way padding */
+  padding-top: var(--pad-top);
+  padding-bottom: var(--pad-bottom);
+  padding-left: var(--pad-left);
+  padding-right: var(--pad-right);
+  
   position: relative;
 }
 
@@ -214,9 +201,6 @@ export default {
   flex-direction: column;
   width: 100%;
   min-height: 100%;
-}
-.content-layout-zone > * {
-  margin-bottom: 16px;
 }
 
 /* MOBILE RESPONSIVENESS */

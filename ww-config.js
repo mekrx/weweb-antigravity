@@ -6,16 +6,35 @@ export default {
         },
         icon: 'layout',
         customStylePropertiesOrder: [
-            ['sidebarWidth', 'sidebarCollapsedWidth', 'topbarHeight', 'contentPadding'],
-            ['sidebarBgColor', 'topbarBgColor', 'contentBgColor', 'overlayColor', 'iconColor'],
-            ['menuToggleIcon']
+            ['isSidebarCollapsed', 'isMobileMenuOpen'],
+            ['sidebarWidth', 'sidebarCollapsedWidth', 'topbarHeight'],
+            ['contentPaddingTop', 'contentPaddingBottom', 'contentPaddingLeft', 'contentPaddingRight'],
+            ['sidebarBgColor', 'topbarBgColor', 'contentBgColor', 'overlayColor']
         ]
     },
+    triggerEvents: [
+        { name: 'overlayClick', label: { en: 'On Mobile Overlay Click (to close menu)', ru: 'Клик по затемнению (закрыть моб. меню)' }, event: {} }
+    ],
     properties: {
         // Dropzones
+        menuToggleZone: { type: 'Array', hidden: true, defaultValue: [] },
         topbarZone: { type: 'Array', hidden: true, defaultValue: [] },
         sidebarZone: { type: 'Array', hidden: true, defaultValue: [] },
         contentZone: { type: 'Array', hidden: true, defaultValue: [] },
+
+        // State variables explicitly exposed for Workflows
+        isSidebarCollapsed: {
+            label: { en: 'Collapse Sidebar (PC)', ru: 'Свернуть меню (ПК)' },
+            type: 'OnOff',
+            defaultValue: false,
+            bindable: true,
+        },
+        isMobileMenuOpen: {
+            label: { en: 'Open Menu (Mobile)', ru: 'Открыть меню (Моб)' },
+            type: 'OnOff',
+            defaultValue: false,
+            bindable: true,
+        },
 
         // Layout Dimensions
         sidebarWidth: {
@@ -42,13 +61,35 @@ export default {
             bindable: true,
             responsive: true,
         },
-        contentPadding: {
-            label: { en: 'Content Padding', ru: 'Отступы до контента' },
+
+        // Detailed Content Paddings
+        contentPaddingTop: {
+            label: { en: 'Padding Top', ru: 'Отступ сверху' },
             type: 'Length',
-            options: { unitChoices: [{ value: 'px', label: 'px', min: 0, max: 100 }] },
+            options: { unitChoices: [{ value: 'px', label: 'px', min: 0, max: 200 }] },
             defaultValue: '32px',
-            bindable: true,
-            responsive: true,
+            bindable: true, responsive: true,
+        },
+        contentPaddingBottom: {
+            label: { en: 'Padding Bottom', ru: 'Отступ снизу' },
+            type: 'Length',
+            options: { unitChoices: [{ value: 'px', label: 'px', min: 0, max: 200 }] },
+            defaultValue: '32px',
+            bindable: true, responsive: true,
+        },
+        contentPaddingLeft: {
+            label: { en: 'Padding Left', ru: 'Отступ слева' },
+            type: 'Length',
+            options: { unitChoices: [{ value: 'px', label: 'px', min: 0, max: 200 }] },
+            defaultValue: '32px',
+            bindable: true, responsive: true,
+        },
+        contentPaddingRight: {
+            label: { en: 'Padding Right', ru: 'Отступ справа' },
+            type: 'Length',
+            options: { unitChoices: [{ value: 'px', label: 'px', min: 0, max: 200 }] },
+            defaultValue: '32px',
+            bindable: true, responsive: true,
         },
 
         // Colors
@@ -56,45 +97,25 @@ export default {
             label: { en: 'Sidebar Fill', ru: 'Фон боковой панели' },
             type: 'Color',
             defaultValue: '#ffffff',
-            bindable: true,
-            responsive: true,
+            bindable: true, responsive: true,
         },
         topbarBgColor: {
             label: { en: 'Top Bar Fill', ru: 'Фон верхней панели' },
             type: 'Color',
             defaultValue: '#ffffff',
-            bindable: true,
-            responsive: true,
+            bindable: true, responsive: true,
         },
         contentBgColor: {
             label: { en: 'Content Fill', ru: 'Фон контента' },
             type: 'Color',
             defaultValue: '#F3F4F6',
-            bindable: true,
-            responsive: true,
+            bindable: true, responsive: true,
         },
         overlayColor: {
             label: { en: 'Overlay Fill', ru: 'Фон затемнения (моб)' },
             type: 'Color',
             defaultValue: 'rgba(0,0,0,0.4)',
-            bindable: true,
-            responsive: true,
-        },
-        iconColor: {
-            label: { en: 'Menu Icon Color', ru: 'Цвет иконки меню' },
-            type: 'Color',
-            defaultValue: '#000000',
-            bindable: true,
-            responsive: true,
-        },
-
-        // Settings
-        menuToggleIcon: {
-            label: { en: 'Menu Toggle Icon', ru: 'Иконка меню' },
-            type: 'Icon',
-            defaultValue: 'lucide:menu',
-            bindable: true,
-            responsive: true,
+            bindable: true, responsive: true,
         }
     }
 };
