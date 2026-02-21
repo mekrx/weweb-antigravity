@@ -13,20 +13,9 @@ export default {
         ]
     },
     properties: {
-        contentZone: {
-            type: 'Info',
-            editorOnly: true
-        },
-        sidebarTopZone: {
-            type: 'Info',
-            editorOnly: true
-        },
-        sidebarBottomZone: {
-            type: 'Info',
-            editorOnly: true
-        },
+        // Removed contentZone, sidebarTopZone, sidebarBottomZone from here because declaring them as 'Info' breaks WeWeb Layouts
         menuWidth: {
-            label: { en: 'Menu Width (PC)', ru: 'Ширина меню (ПК)', pl: 'Szerokość menu (PC)' },
+            label: { en: 'Menu Width (PC)', ru: 'Ширина меню (ПК)', pl: 'Szer. menu (PC)' },
             type: 'Length',
             options: {
                 unitChoices: [{ value: 'px', label: 'px', min: 60, max: 400 }],
@@ -36,7 +25,7 @@ export default {
             responsive: true,
         },
         menuPadding: {
-            label: { en: 'Menu Padding', ru: 'Отступы меню', pl: 'Odstępy menu' },
+            label: { en: 'Menu Padding', ru: 'Отступы меню', pl: 'Padding menu' },
             type: 'Length',
             options: {
                 unitChoices: [{ value: 'px', label: 'px', min: 0, max: 100 }],
@@ -46,7 +35,7 @@ export default {
             responsive: true,
         },
         contentPadding: {
-            label: { en: 'Content Padding', ru: 'Отступы контента', pl: 'Odstępy zawartości' },
+            label: { en: 'Content Padding', ru: 'Отступы контента', pl: 'Padding zaw.' },
             type: 'Length',
             options: {
                 unitChoices: [{ value: 'px', label: 'px', min: 0, max: 100 }],
@@ -84,14 +73,14 @@ export default {
             responsive: true,
         },
         hoverBgColor: {
-            label: { en: 'Hover BG Color', ru: 'Фон при наведении', pl: 'Tło po najechaniu' },
+            label: { en: 'Hover BG Color', ru: 'Фон при наведении', pl: 'Tło hover' },
             type: 'Color',
             defaultValue: 'rgba(55, 65, 81, 0.05)',
             bindable: true,
             responsive: true,
         },
         activeColor: {
-            label: { en: 'Active Item Color', ru: 'Цвет активного', pl: 'Aktywny kolor' },
+            label: { en: 'Active Item Color', ru: 'Цвет активного', pl: 'Kolor aktywny' },
             type: 'Color',
             defaultValue: '#3B82F6',
             bindable: true,
@@ -108,7 +97,7 @@ export default {
             responsive: true,
         },
         menuCategories: {
-            label: { en: 'Main Menu Categories', ru: 'Основные категории', pl: 'Kategorie główne' },
+            label: { en: 'Menu Categories', ru: 'Категории', pl: 'Kategorie menu' },
             type: 'Array',
             options: {
                 item: {
@@ -117,11 +106,11 @@ export default {
                         item: {
                             title: {
                                 type: 'Text',
-                                label: { en: 'Category Title', ru: 'Заголовок категории', pl: 'Tytuł kategorii' }
+                                label: { en: 'Title', ru: 'Заголовок', pl: 'Tytuł' }
                             },
                             items: {
                                 type: 'Array',
-                                label: { en: 'Menu Items', ru: 'Элементы меню', pl: 'Elementy menu' },
+                                label: { en: 'Items', ru: 'Элементы', pl: 'Elementy' },
                                 options: {
                                     item: {
                                         type: 'Object',
@@ -137,7 +126,7 @@ export default {
                                                 },
                                                 link: {
                                                     type: 'Link',
-                                                    label: { en: 'Link / Action', ru: 'Ссылка', pl: 'Link' }
+                                                    label: { en: 'Link', ru: 'Ссылка', pl: 'Link' }
                                                 }
                                             }
                                         }
@@ -152,23 +141,23 @@ export default {
                 {
                     title: 'ANALYTICS',
                     items: [
-                        { icon: 'fas fa-chart-pie', text: 'Dashboard', link: {} },
-                        { icon: 'fas fa-chart-line', text: 'Reports', link: {} }
+                        { icon: 'lucide:pie-chart', text: 'Dashboard', link: null },
+                        { icon: 'lucide:trending-up', text: 'Reports', link: null }
                     ]
                 },
                 {
                     title: 'MANAGEMENT',
                     items: [
-                        { icon: 'fas fa-users', text: 'Customers', link: {} },
-                        { icon: 'fas fa-shopping-cart', text: 'Orders', link: {} },
-                        { icon: 'fas fa-box', text: 'Products', link: {} }
+                        { icon: 'lucide:users', text: 'Customers', link: null },
+                        { icon: 'lucide:shopping-cart', text: 'Orders', link: null },
+                        { icon: 'lucide:box', text: 'Products', link: null }
                     ]
                 }
             ],
             bindable: true
         },
         systemMenu: {
-            label: { en: 'Bottom System Menu', ru: 'Нижнее системное меню', pl: 'Dolne menu systemowe' },
+            label: { en: 'Bottom Menu', ru: 'Нижнее меню', pl: 'Dolne menu' },
             type: 'Array',
             options: {
                 item: {
@@ -185,15 +174,15 @@ export default {
                             },
                             link: {
                                 type: 'Link',
-                                label: { en: 'Link / Action', ru: 'Ссылка', pl: 'Link' }
+                                label: { en: 'Link', ru: 'Ссылка', pl: 'Link' }
                             }
                         }
                     }
                 }
             },
             defaultValue: [
-                { icon: 'fas fa-cog', text: 'Settings', link: {} },
-                { icon: 'fas fa-question-circle', text: 'Help & Support', link: {} }
+                { icon: 'lucide:settings', text: 'Settings', link: null },
+                { icon: 'lucide:help-circle', text: 'Help & Support', link: null }
             ],
             bindable: true
         }

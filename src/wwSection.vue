@@ -10,11 +10,7 @@
 
       <div class="sidebar-header">
         <button class="toggle-btn" @click="toggleSidebar" :style="{ color: content.iconColor }">
-          <wwElement 
-            v-bind="{ icon: 'fas fa-bars' }" 
-            ww-responsive="ww-icon"
-            class="native-icon"
-          />
+          <wwEditorIcon name="lucide:menu" :icon="content.iconColor" class="native-icon" />
         </button>
       </div>
 
@@ -33,26 +29,25 @@
             :style="{ color: content.iconColor }"
           >
             <span class="category-title">{{ category.title }}</span>
-            <wwElement 
-              v-bind="{ icon: expandedCategories[catIdx] ? 'fas fa-chevron-up' : 'fas fa-chevron-down' }" 
-              ww-responsive="ww-icon"
+            <wwEditorIcon 
+              :name="expandedCategories[catIdx] ? 'lucide:chevron-up' : 'lucide:chevron-down'" 
               class="chevron-icon native-icon"
             />
           </div>
           
           <!-- Category Items list -->
           <div class="menu-items-list" v-show="expandedCategories[catIdx] || isCollapsed">
-            <wwElement 
+            <wwLink
               v-for="(item, index) in category.items" 
               :key="'item-'+index"
-              href="item.link"
+              :link="item.link"
               class="menu-item"
               :style="{ '--hover-bg': content.hoverBgColor }"
             >
               <div class="icon-wrapper">
-                <wwElement 
-                  v-bind="item.icon" 
-                  ww-responsive="ww-icon"
+                <wwEditorIcon 
+                  :name="item.icon"
+                  :icon="item.icon"
                   :style="{ color: content.iconColor }"
                   class="native-icon"
                 />
@@ -60,7 +55,7 @@
               <span v-if="!isCollapsed" class="item-text" :style="{ color: content.textColor }">
                 {{ item.text }}
               </span>
-            </wwElement>
+            </wwLink>
           </div>
         </div>
       </div>
@@ -68,17 +63,17 @@
       <!-- Bottom System Menu (Settings etc.) -->
       <div class="system-menu">
         <div class="menu-items-list">
-          <wwElement 
+          <wwLink 
             v-for="(sysItem, sysIdx) in content.systemMenu" 
             :key="'sys-'+sysIdx"
-            href="sysItem.link"
+            :link="sysItem.link"
             class="menu-item"
             :style="{ '--hover-bg': content.hoverBgColor }"
           >
             <div class="icon-wrapper">
-              <wwElement 
-                v-bind="sysItem.icon" 
-                ww-responsive="ww-icon"
+              <wwEditorIcon 
+                :name="sysItem.icon" 
+                :icon="sysItem.icon"
                 :style="{ color: content.iconColor }"
                 class="native-icon"
               />
@@ -86,11 +81,11 @@
             <span v-if="!isCollapsed" class="item-text" :style="{ color: content.textColor }">
               {{ sysItem.text }}
             </span>
-          </wwElement>
+          </wwLink>
         </div>
         
         <!-- Bottom Layout Zone (e.g User Profile block) -->
-        <div class="sidebar-bottom-zone" v-if="!isCollapsed">
+        <div class="sidebar-bottom-zone" v-show="!isCollapsed">
           <wwLayout path="sidebarBottomZone" class="layout-zone" />
         </div>
       </div>
@@ -100,11 +95,7 @@
     <nav class="topbar" v-if="isMobile">
       <div class="topbar-header">
         <button class="toggle-btn" @click="toggleMobileMenu" :style="{ color: content.iconColor }">
-          <wwElement 
-            v-bind="{ icon: 'fas fa-bars' }" 
-            ww-responsive="ww-icon"
-            class="native-icon"
-          />
+          <wwEditorIcon name="lucide:menu" class="native-icon" />
         </button>
         <span class="topbar-title" v-if="!isMobileMenuOpen" :style="{ color: content.textColor }">
           Menu
@@ -118,44 +109,43 @@
           <div class="mobile-category-title" :style="{ color: content.iconColor }">
             {{ category.title }}
           </div>
-          <wwElement 
+          <wwLink 
             v-for="(item, index) in category.items" 
             :key="'mob-item-'+index"
-            href="item.link"
+            :link="item.link"
             class="mobile-menu-item"
           >
-            <wwElement 
-              v-bind="item.icon" 
-              ww-responsive="ww-icon"
+            <wwEditorIcon 
+              :name="item.icon" 
+              :icon="item.icon"
               :style="{ color: content.iconColor }"
               class="mobile-icon native-icon"
             />
             <span class="item-text" :style="{ color: content.textColor }">
               {{ item.text }}
             </span>
-          </wwElement>
+          </wwLink>
         </div>
         
-        <!-- Distinguisher for system elements -->
         <div class="mobile-divider"></div>
         
         <!-- System Menu -->
-        <wwElement 
+        <wwLink 
           v-for="(sysItem, sysIdx) in content.systemMenu" 
           :key="'mob-sys-'+sysIdx"
-          href="sysItem.link"
+          :link="sysItem.link"
           class="mobile-menu-item"
         >
-          <wwElement 
-            v-bind="sysItem.icon" 
-            ww-responsive="ww-icon"
+          <wwEditorIcon 
+            :name="sysItem.icon"
+            :icon="sysItem.icon"
             :style="{ color: content.iconColor }"
             class="mobile-icon native-icon"
           />
           <span class="item-text" :style="{ color: content.textColor }">
             {{ sysItem.text }}
           </span>
-        </wwElement>
+        </wwLink>
       </div>
     </nav>
 
@@ -204,7 +194,6 @@ export default {
       immediate: true,
       handler(newCats) {
         if (!newCats) return;
-        // Auto-expand all categories by default when loaded
         newCats.forEach((_, idx) => {
           if (this.expandedCategories[idx] === undefined) {
              this.expandedCategories[idx] = true;
@@ -251,10 +240,11 @@ export default {
 }
 
 .native-icon {
-  font-size: 1.2em;
+  font-size: 1.25em;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 /* SIDEBAR (DESKTOP) */
@@ -278,8 +268,9 @@ export default {
 
 .sidebar-top-zone {
   padding: 0 var(--menu-padding);
-  margin-bottom: 16px;
-  min-height: 20px;
+  margin-bottom: 24px;
+  min-height: 48px; /* Force minimum height so dragging works */
+  width: 100%;
 }
 
 .sidebar-header {
@@ -326,20 +317,16 @@ export default {
   justify-content: space-between;
   padding: 8px 12px;
   cursor: pointer;
-  font-size: 0.85em;
+  font-size: 0.8em;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  opacity: 0.7;
+  opacity: 0.6;
   transition: opacity 0.2s;
 }
 
 .category-header:hover {
-  opacity: 1;
-}
-
-.chevron-icon {
-  font-size: 0.9em;
+  opacity: 0.9;
 }
 
 .menu-items-list {
@@ -348,7 +335,6 @@ export default {
   gap: 4px;
 }
 
-/* Inherit from parent logic for WeWeb Link native elements */
 .menu-item {
   display: flex;
   align-items: center;
@@ -358,6 +344,8 @@ export default {
   transition: all 0.2s ease;
   cursor: pointer;
   color: inherit;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .sidebar.is-collapsed .menu-item {
@@ -369,10 +357,9 @@ export default {
   background-color: var(--hover-bg, rgba(0,0,0,0.04));
 }
 
-/* Selected state styling (optional enhancement) */
 .menu-item.router-link-active,
 .menu-item.ww-active-state {
-  background-color: rgba(59, 130, 246, 0.1); /* active color slight bg */
+  background-color: rgba(59, 130, 246, 0.1);
 }
 .menu-item.router-link-active .native-icon,
 .menu-item.ww-active-state .native-icon,
@@ -401,7 +388,7 @@ export default {
 
 .system-menu {
   margin-top: auto;
-  padding: 16px var(--menu-padding);
+  padding: 24px var(--menu-padding) 0;
   border-top: 1px solid rgba(0,0,0,0.05);
   display: flex;
   flex-direction: column;
@@ -409,14 +396,16 @@ export default {
 }
 
 .sidebar-bottom-zone {
-  min-height: 40px;
-  border-top: 1px dashed rgba(0,0,0,0.1);
-  padding-top: 12px;
+  min-height: 48px; /* Force minimum height */
+  width: 100%;
 }
 
 .layout-zone {
   width: 100%;
-  min-height: 100%;
+  height: 100%;
+  min-height: 48px;
+  display: flex;
+  flex-direction: column;
 }
 
 /* TOPBAR (MOBILE) */
@@ -461,7 +450,7 @@ export default {
   font-weight: 700;
   text-transform: uppercase;
   margin: 12px 12px 4px 12px;
-  opacity: 0.7;
+  opacity: 0.6;
 }
 
 .mobile-menu-item {
