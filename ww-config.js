@@ -2,7 +2,8 @@ export default {
     editor: {
         label: {
             en: 'CRM Layout Section',
-            ru: 'Секция Макет CRM'
+            ru: 'Секция Макет CRM',
+            pl: 'Sekcja Układu CRM'
         },
         icon: 'layout',
         customStylePropertiesOrder: [
@@ -13,7 +14,7 @@ export default {
     },
     properties: {
         menuWidth: {
-            label: { en: 'Menu Width (PC)', ru: 'Ширина меню (ПК)' },
+            label: { en: 'Menu Width (PC)', ru: 'Ширина меню (ПК)', pl: 'Szerokość menu (PC)' },
             type: 'Length',
             options: {
                 unitChoices: [{ value: 'px', label: 'px', min: 50, max: 400 }],
@@ -23,7 +24,7 @@ export default {
             responsive: true,
         },
         menuPadding: {
-            label: { en: 'Menu Padding', ru: 'Отступы меню' },
+            label: { en: 'Menu Padding', ru: 'Отступы меню', pl: 'Odstępy menu' },
             type: 'Length',
             options: {
                 unitChoices: [{ value: 'px', label: 'px', min: 0, max: 100 }],
@@ -33,7 +34,7 @@ export default {
             responsive: true,
         },
         contentPadding: {
-            label: { en: 'Content Padding', ru: 'Отступы контента' },
+            label: { en: 'Content Padding', ru: 'Отступы контента', pl: 'Odstępy zawartości' },
             type: 'Length',
             options: {
                 unitChoices: [{ value: 'px', label: 'px', min: 0, max: 100 }],
@@ -43,35 +44,35 @@ export default {
             responsive: true,
         },
         menuBgColor: {
-            label: { en: 'Menu Background', ru: 'Фон меню' },
+            label: { en: 'Menu Background', ru: 'Фон меню', pl: 'Tło menu' },
             type: 'Color',
             defaultValue: '#ffffff',
             bindable: true,
             responsive: true,
         },
         contentBgColor: {
-            label: { en: 'Content Background', ru: 'Фон контента' },
+            label: { en: 'Content Background', ru: 'Фон контента', pl: 'Tło zawartości' },
             type: 'Color',
             defaultValue: '#F3F4F6',
             bindable: true,
             responsive: true,
         },
         textColor: {
-            label: { en: 'Text Color', ru: 'Цвет текста' },
+            label: { en: 'Text Color', ru: 'Цвет текста', pl: 'Kolor tekstu' },
             type: 'Color',
             defaultValue: '#374151',
             bindable: true,
             responsive: true,
         },
         iconColor: {
-            label: { en: 'Icon Color', ru: 'Цвет иконок' },
+            label: { en: 'Icon Color', ru: 'Цвет иконок', pl: 'Kolor ikony' },
             type: 'Color',
             defaultValue: '#6B7280',
             bindable: true,
             responsive: true,
         },
         fontSize: {
-            label: { en: 'Base Font Size', ru: 'Размер шрифта' },
+            label: { en: 'Base Font Size', ru: 'Размер шрифта', pl: 'Rozmiar czcionki' },
             type: 'Length',
             options: {
                 unitChoices: [{ value: 'px', label: 'px', min: 10, max: 24 }],
@@ -81,7 +82,7 @@ export default {
             responsive: true,
         },
         menuItems: {
-            label: { en: 'Menu Items', ru: 'Элементы меню' },
+            label: { en: 'Menu Items', ru: 'Элементы меню', pl: 'Elementy menu' },
             type: 'Array',
             options: {
                 item: {
@@ -90,15 +91,15 @@ export default {
                         item: {
                             icon: {
                                 type: 'Text',
-                                label: { en: 'Icon (FontAwesome Class)', ru: 'Иконка (класс FontAwesome)' }
+                                label: { en: 'Icon (FontAwesome Class)', ru: 'Иконка (класс FontAwesome)', pl: 'Ikona (klasa FontAwesome)' }
                             },
                             text: {
                                 type: 'Text',
-                                label: { en: 'Label', ru: 'Текст' }
+                                label: { en: 'Label', ru: 'Текст', pl: 'Etykieta' }
                             },
                             link: {
                                 type: 'Text',
-                                label: { en: 'Link / Action', ru: 'Ссылка' }
+                                label: { en: 'Link / Action', ru: 'Ссылка', pl: 'Link' }
                             }
                         }
                     }
