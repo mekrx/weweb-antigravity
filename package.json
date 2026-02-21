@@ -1,0 +1,12 @@
+{
+  "name": "weweb-crm-section",
+  "version": "1.0.0",
+  "description": "WeWeb CRM layout section",
+  "main": "ww-config.js",
+  "scripts": {
+    "serve": "weweb serve"
+  },
+  "dependencies": {
+    "vue": "^3.2.0"
+  }
+}
