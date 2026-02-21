@@ -7,9 +7,13 @@
     "type": "section"
   },
   "scripts": {
-    "serve": "ww serve"
+    "serve": "ww serve",
+    "build": "ww build"
   },
   "dependencies": {
     "vue": "^3.2.0"
+  },
+  "devDependencies": {
+    "@weweb/cli": "latest"
   }
 }
