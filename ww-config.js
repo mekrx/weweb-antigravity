@@ -7,12 +7,13 @@ export default {
         icon: 'layout',
         customStylePropertiesOrder: [
             ['isSidebarCollapsed', 'isMobileMenuOpen'],
+            ['animationDuration', 'animationTimingFunction'],
             ['sidebarWidth', 'sidebarCollapsedWidth', 'topbarHeight'],
             ['sidebarBgColor', 'topbarBgColor', 'overlayColor']
         ]
     },
     triggerEvents: [
-        { name: 'overlayClick', label: { en: 'On Mobile Overlay Click', ru: 'Клик по затемнению (закрыть моб. меню)' }, event: {} }
+        { name: 'overlayClick', label: { en: 'On Mobile Overlay Click (to close menu)', ru: 'Клик по затемнению (закрыть моб. меню)' }, event: {} }
     ],
     properties: {
         // Dropzones
@@ -32,6 +33,32 @@ export default {
             type: 'OnOff',
             defaultValue: false,
             bindable: true,
+        },
+
+        // Animation Controls
+        animationDuration: {
+            label: { en: 'Animation Duration (ms)', ru: 'Скорость анимации (ms)' },
+            type: 'Length',
+            options: { unitChoices: [{ value: 'ms', label: 'ms', min: 0, max: 2000 }] },
+            defaultValue: '300ms',
+            bindable: true,
+            responsive: true,
+        },
+        animationTimingFunction: {
+            label: { en: 'Animation Ease', ru: 'Тип анимации' },
+            type: 'TextSelect',
+            options: {
+                options: [
+                    { value: 'ease', label: { en: 'ease' } },
+                    { value: 'linear', label: { en: 'linear' } },
+                    { value: 'ease-in', label: { en: 'ease-in' } },
+                    { value: 'ease-out', label: { en: 'ease-out' } },
+                    { value: 'ease-in-out', label: { en: 'ease-in-out' } },
+                ],
+            },
+            defaultValue: 'ease',
+            bindable: true,
+            responsive: true,
         },
 
         // Layout Dimensions

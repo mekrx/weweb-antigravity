@@ -16,7 +16,8 @@
     <div 
       class="sidebar-overlay" 
       v-if="isMobile && content.isMobileMenuOpen" 
-      @click="closeMobileMenu"
+      @mousedown.prevent="closeMobileMenu"
+      @touchstart.prevent="closeMobileMenu"
     ></div>
 
     <!-- SIDEBAR -->
@@ -53,6 +54,9 @@ export default {
         '--sidebar-collapsed-width': this.content.sidebarCollapsedWidth || '80px',
         '--topbar-height': this.content.topbarHeight || '70px',
         
+        '--anim-duration': this.content.animationDuration || '300ms',
+        '--anim-timing': this.content.animationTimingFunction || 'ease',
+        
         '--sidebar-bg': this.content.sidebarBgColor || '#ffffff',
         '--topbar-bg': this.content.topbarBgColor || '#ffffff',
         '--overlay-bg': this.content.overlayColor || 'rgba(0,0,0,0.4)',
@@ -69,29 +73,28 @@ export default {
     handleResize() {
       this.windowWidth = window.innerWidth;
     },
-    closeMobileMenu() {
-      // 1. Emit trigger event for custom workflows (fallback/advanced)
+    closeMobileMenu(e) {
+      if (e) { e.stopPropagation(); }
+      // 1. Emit purely for custom Workflows triggers (e.g user sets "On Mobile Overlay Click -> Change Variable to FALSE")
       this.$emit('trigger-event', { name: 'overlayClick' });
-      // 2. Automagically update the bound variable to close the menu instantly
-      if (typeof this.$emit === 'function') {
-        this.$emit('update:content:isMobileMenuOpen', false);
-      }
+      // 2. Attempt hard override inside the plugin content object (Often works directly in editor)
+      this.$emit('update:content', { ...this.content, isMobileMenuOpen: false });
     }
   }
 };
 </script>
 
 <style scoped>
-/* MAIN CONTAINER - Works as purely a fixed layout scaffold holding menus */
+/* MAIN CONTAINER */
 .navigation-section {
   position: absolute;
   top: 0;
   left: 0;
   width: 100vw;
-  height: 0; /* Zero height prevents swallowing mouse clicks behind the menus */
+  height: 0;
   z-index: 1000;
   font-family: inherit;
-  pointer-events: none; /* Allows interactions with Elements *underneath* that belong to the main Page */
+  pointer-events: none;
 }
 
 /* Enable pointer events only directly on our panels */
@@ -112,7 +115,7 @@ export default {
   background-color: var(--topbar-bg);
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   box-sizing: border-box;
-  z-index: 1001; /* Keep above sidebar and page content */
+  z-index: 1005; /* Highest level: always over sidebar */
   padding: 0; 
 }
 
@@ -143,15 +146,16 @@ export default {
   display: flex;
   flex-direction: column;
   position: fixed;
-  top: var(--topbar-height); /* Starts exactly below Topbar */
+  top: var(--topbar-height);
   left: 0;
   width: var(--sidebar-width);
-  height: calc(100vh - var(--topbar-height)); /* Spans to bottom precisely */
+  height: calc(100vh - var(--topbar-height));
   background-color: var(--sidebar-bg);
   border-right: 1px solid rgba(0, 0, 0, 0.05);
   box-sizing: border-box;
   z-index: 1000;
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Controlled transitions using CSS variables tied to WeWeb properties */
+  transition: width var(--anim-duration) var(--anim-timing), transform var(--anim-duration) var(--anim-timing);
   overflow-y: auto;
   overflow-x: hidden; 
   white-space: nowrap; 
@@ -166,8 +170,6 @@ export default {
   display: flex;
   flex-direction: column;
   width: 100%;
-  
-  /* Forces 100% height to properly space elements from top vs bottom */
   flex-grow: 1; 
   min-height: 100%;
 }
@@ -177,20 +179,21 @@ export default {
   position: fixed;
   inset: 0;
   background-color: var(--overlay-bg, rgba(0,0,0,0.4));
-  z-index: 999; /* Below panels, above page */
+  z-index: 990; /* Below sidebar (1000) and topbar (1005) */
   opacity: 1;
-  transition: opacity 0.3s ease;
+  transition: opacity var(--anim-duration) var(--anim-timing);
   cursor: pointer;
 }
 
 /* MOBILE RESPONSIVENESS */
 @media (max-width: 991px) {
   .sidebar {
-    top: 0;
-    height: 100vh;
+    /* Menu starts below topbar and takes remaining height on mobile too */
+    top: var(--topbar-height);
+    height: calc(100vh - var(--topbar-height));
     transform: translateX(-100%);
     box-shadow: 2px 0 12px rgba(0,0,0,0.1);
-    z-index: 1002; /* Stack entirely covering screen */
+    z-index: 1000; /* Stack explicitly UNDER the topbar (1005) */
   }
   
   .sidebar.is-mobile-open {
