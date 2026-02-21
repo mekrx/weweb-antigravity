@@ -1,26 +1,24 @@
 export default {
     editor: {
         label: {
-            en: 'CRM Dashboard Layout',
-            ru: 'Макет CRM Дашборда'
+            en: 'CRM Navigation Menu',
+            ru: 'Навигационное меню CRM'
         },
         icon: 'layout',
         customStylePropertiesOrder: [
             ['isSidebarCollapsed', 'isMobileMenuOpen'],
             ['sidebarWidth', 'sidebarCollapsedWidth', 'topbarHeight'],
-            ['contentPaddingTop', 'contentPaddingBottom', 'contentPaddingLeft', 'contentPaddingRight'],
-            ['sidebarBgColor', 'topbarBgColor', 'contentBgColor', 'overlayColor']
+            ['sidebarBgColor', 'topbarBgColor', 'overlayColor']
         ]
     },
     triggerEvents: [
-        { name: 'overlayClick', label: { en: 'On Mobile Overlay Click (to close menu)', ru: 'Клик по затемнению (закрыть моб. меню)' }, event: {} }
+        { name: 'overlayClick', label: { en: 'On Mobile Overlay Click', ru: 'Клик по затемнению (закрыть моб. меню)' }, event: {} }
     ],
     properties: {
         // Dropzones
         menuToggleZone: { type: 'Array', hidden: true, defaultValue: [] },
         topbarZone: { type: 'Array', hidden: true, defaultValue: [] },
         sidebarZone: { type: 'Array', hidden: true, defaultValue: [] },
-        contentZone: { type: 'Array', hidden: true, defaultValue: [] },
 
         // State variables explicitly exposed for Workflows
         isSidebarCollapsed: {
@@ -62,36 +60,6 @@ export default {
             responsive: true,
         },
 
-        // Detailed Content Paddings
-        contentPaddingTop: {
-            label: { en: 'Padding Top', ru: 'Отступ сверху' },
-            type: 'Length',
-            options: { unitChoices: [{ value: 'px', label: 'px', min: 0, max: 200 }] },
-            defaultValue: '32px',
-            bindable: true, responsive: true,
-        },
-        contentPaddingBottom: {
-            label: { en: 'Padding Bottom', ru: 'Отступ снизу' },
-            type: 'Length',
-            options: { unitChoices: [{ value: 'px', label: 'px', min: 0, max: 200 }] },
-            defaultValue: '32px',
-            bindable: true, responsive: true,
-        },
-        contentPaddingLeft: {
-            label: { en: 'Padding Left', ru: 'Отступ слева' },
-            type: 'Length',
-            options: { unitChoices: [{ value: 'px', label: 'px', min: 0, max: 200 }] },
-            defaultValue: '32px',
-            bindable: true, responsive: true,
-        },
-        contentPaddingRight: {
-            label: { en: 'Padding Right', ru: 'Отступ справа' },
-            type: 'Length',
-            options: { unitChoices: [{ value: 'px', label: 'px', min: 0, max: 200 }] },
-            defaultValue: '32px',
-            bindable: true, responsive: true,
-        },
-
         // Colors
         sidebarBgColor: {
             label: { en: 'Sidebar Fill', ru: 'Фон боковой панели' },
@@ -103,12 +71,6 @@ export default {
             label: { en: 'Top Bar Fill', ru: 'Фон верхней панели' },
             type: 'Color',
             defaultValue: '#ffffff',
-            bindable: true, responsive: true,
-        },
-        contentBgColor: {
-            label: { en: 'Content Fill', ru: 'Фон контента' },
-            type: 'Color',
-            defaultValue: '#F3F4F6',
             bindable: true, responsive: true,
         },
         overlayColor: {
