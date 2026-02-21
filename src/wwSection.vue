@@ -3,26 +3,96 @@
     
     <!-- DESKTOP / TABLET LANDSCAPE: SIDEBAR -->
     <nav class="sidebar" :class="{ 'is-collapsed': isCollapsed }" v-if="!isMobile">
+      <!-- Top Zone (e.g. Logo) -->
+      <div class="sidebar-top-zone">
+        <wwLayout path="sidebarTopZone" class="layout-zone" />
+      </div>
+
       <div class="sidebar-header">
         <button class="toggle-btn" @click="toggleSidebar" :style="{ color: content.iconColor }">
-          <i class="fas fa-bars"></i>
+          <wwElement 
+            v-bind="{ icon: 'fas fa-bars' }" 
+            ww-responsive="ww-icon"
+            class="native-icon"
+          />
         </button>
       </div>
 
-      <div class="menu-items">
-        <a 
-          v-for="(item, index) in content.menuItems" 
-          :key="index"
-          :href="item.link"
-          class="menu-item"
+      <!-- Scrollable Main Menu -->
+      <div class="menu-items-scroll">
+        <div 
+          v-for="(category, catIdx) in content.menuCategories" 
+          :key="'cat-'+catIdx"
+          class="menu-category"
         >
-          <div class="icon-wrapper">
-            <i :class="item.icon" :style="{ color: content.iconColor }"></i>
+          <!-- Category Header -->
+          <div 
+            class="category-header" 
+            v-if="!isCollapsed"
+            @click="toggleCategory(catIdx)"
+            :style="{ color: content.iconColor }"
+          >
+            <span class="category-title">{{ category.title }}</span>
+            <wwElement 
+              v-bind="{ icon: expandedCategories[catIdx] ? 'fas fa-chevron-up' : 'fas fa-chevron-down' }" 
+              ww-responsive="ww-icon"
+              class="chevron-icon native-icon"
+            />
           </div>
-          <span v-if="!isCollapsed" class="item-text" :style="{ color: content.textColor }">
-            {{ item.text }}
-          </span>
-        </a>
+          
+          <!-- Category Items list -->
+          <div class="menu-items-list" v-show="expandedCategories[catIdx] || isCollapsed">
+            <wwElement 
+              v-for="(item, index) in category.items" 
+              :key="'item-'+index"
+              href="item.link"
+              class="menu-item"
+              :style="{ '--hover-bg': content.hoverBgColor }"
+            >
+              <div class="icon-wrapper">
+                <wwElement 
+                  v-bind="item.icon" 
+                  ww-responsive="ww-icon"
+                  :style="{ color: content.iconColor }"
+                  class="native-icon"
+                />
+              </div>
+              <span v-if="!isCollapsed" class="item-text" :style="{ color: content.textColor }">
+                {{ item.text }}
+              </span>
+            </wwElement>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom System Menu (Settings etc.) -->
+      <div class="system-menu">
+        <div class="menu-items-list">
+          <wwElement 
+            v-for="(sysItem, sysIdx) in content.systemMenu" 
+            :key="'sys-'+sysIdx"
+            href="sysItem.link"
+            class="menu-item"
+            :style="{ '--hover-bg': content.hoverBgColor }"
+          >
+            <div class="icon-wrapper">
+              <wwElement 
+                v-bind="sysItem.icon" 
+                ww-responsive="ww-icon"
+                :style="{ color: content.iconColor }"
+                class="native-icon"
+              />
+            </div>
+            <span v-if="!isCollapsed" class="item-text" :style="{ color: content.textColor }">
+              {{ sysItem.text }}
+            </span>
+          </wwElement>
+        </div>
+        
+        <!-- Bottom Layout Zone (e.g User Profile block) -->
+        <div class="sidebar-bottom-zone" v-if="!isCollapsed">
+          <wwLayout path="sidebarBottomZone" class="layout-zone" />
+        </div>
       </div>
     </nav>
 
@@ -30,25 +100,62 @@
     <nav class="topbar" v-if="isMobile">
       <div class="topbar-header">
         <button class="toggle-btn" @click="toggleMobileMenu" :style="{ color: content.iconColor }">
-          <i class="fas fa-bars"></i>
+          <wwElement 
+            v-bind="{ icon: 'fas fa-bars' }" 
+            ww-responsive="ww-icon"
+            class="native-icon"
+          />
         </button>
         <span class="topbar-title" v-if="!isMobileMenuOpen" :style="{ color: content.textColor }">
-          CRM Menu
+          Menu
         </span>
       </div>
 
+      <!-- Mobile Dropdown -->
       <div class="mobile-dropdown" v-if="isMobileMenuOpen">
-        <a 
-          v-for="(item, index) in content.menuItems" 
-          :key="index"
-          :href="item.link"
+        <!-- Main Categories -->
+        <div v-for="(category, catIdx) in content.menuCategories" :key="'mob-cat-'+catIdx">
+          <div class="mobile-category-title" :style="{ color: content.iconColor }">
+            {{ category.title }}
+          </div>
+          <wwElement 
+            v-for="(item, index) in category.items" 
+            :key="'mob-item-'+index"
+            href="item.link"
+            class="mobile-menu-item"
+          >
+            <wwElement 
+              v-bind="item.icon" 
+              ww-responsive="ww-icon"
+              :style="{ color: content.iconColor }"
+              class="mobile-icon native-icon"
+            />
+            <span class="item-text" :style="{ color: content.textColor }">
+              {{ item.text }}
+            </span>
+          </wwElement>
+        </div>
+        
+        <!-- Distinguisher for system elements -->
+        <div class="mobile-divider"></div>
+        
+        <!-- System Menu -->
+        <wwElement 
+          v-for="(sysItem, sysIdx) in content.systemMenu" 
+          :key="'mob-sys-'+sysIdx"
+          href="sysItem.link"
           class="mobile-menu-item"
         >
-          <i :class="item.icon" :style="{ color: content.iconColor }" class="mobile-icon"></i>
+          <wwElement 
+            v-bind="sysItem.icon" 
+            ww-responsive="ww-icon"
+            :style="{ color: content.iconColor }"
+            class="mobile-icon native-icon"
+          />
           <span class="item-text" :style="{ color: content.textColor }">
-            {{ item.text }}
+            {{ sysItem.text }}
           </span>
-        </a>
+        </wwElement>
       </div>
     </nav>
 
@@ -65,18 +172,17 @@
 export default {
   props: {
     content: { type: Object, required: true },
-    /* WeWeb automatically passes global props like wwFront, isEditing etc. */
   },
   data() {
     return {
       isCollapsed: false,
       isMobileMenuOpen: false,
       windowWidth: window.innerWidth,
+      expandedCategories: {}, // tracks which categories are open
     };
   },
   computed: {
     isMobile() {
-      // 992px breakpoint for responsive behavior (Mobile and small tablets)
       return this.windowWidth < 992;
     },
     cssVars() {
@@ -88,8 +194,23 @@ export default {
         '--icon-color': this.content.iconColor || '#6B7280',
         '--menu-padding': this.content.menuPadding || '16px',
         '--content-padding': this.content.contentPadding || '32px',
-        '--font-size': this.content.fontSize || '15px'
+        '--font-size': this.content.fontSize || '14px',
+        '--active-color': this.content.activeColor || '#3B82F6'
       };
+    }
+  },
+  watch: {
+    'content.menuCategories': {
+      immediate: true,
+      handler(newCats) {
+        if (!newCats) return;
+        // Auto-expand all categories by default when loaded
+        newCats.forEach((_, idx) => {
+          if (this.expandedCategories[idx] === undefined) {
+             this.expandedCategories[idx] = true;
+          }
+        });
+      }
     }
   },
   mounted() {
@@ -105,9 +226,11 @@ export default {
     toggleMobileMenu() {
       this.isMobileMenuOpen = !this.isMobileMenuOpen;
     },
+    toggleCategory(idx) {
+      this.expandedCategories[idx] = !this.expandedCategories[idx];
+    },
     handleResize() {
       this.windowWidth = window.innerWidth;
-      // Auto-close mobile dropdown when resizing to desktop
       if (!this.isMobile && this.isMobileMenuOpen) {
         this.isMobileMenuOpen = false;
       }
@@ -127,6 +250,13 @@ export default {
   background-color: var(--content-bg);
 }
 
+.native-icon {
+  font-size: 1.2em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* SIDEBAR (DESKTOP) */
 .sidebar {
   display: flex;
@@ -134,7 +264,7 @@ export default {
   width: var(--menu-width);
   height: 100vh;
   background-color: var(--menu-bg);
-  padding: var(--menu-padding);
+  padding: var(--menu-padding) 0;
   box-sizing: border-box;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 2px 0 8px rgba(0,0,0,0.05);
@@ -146,11 +276,18 @@ export default {
   width: calc(48px + (var(--menu-padding) * 2));
 }
 
+.sidebar-top-zone {
+  padding: 0 var(--menu-padding);
+  margin-bottom: 16px;
+  min-height: 20px;
+}
+
 .sidebar-header {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
+  padding: 0 var(--menu-padding);
 }
 
 .sidebar.is-collapsed .sidebar-header {
@@ -173,34 +310,76 @@ export default {
   background-color: rgba(0,0,0,0.05);
 }
 
-.toggle-btn i {
-  font-size: 1.25em;
-}
-
-.menu-items {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.menu-items-scroll {
+  flex-grow: 1;
   overflow-y: auto;
   overflow-x: hidden;
+  padding: 0 var(--menu-padding);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
+.category-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 0.85em;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.category-header:hover {
+  opacity: 1;
+}
+
+.chevron-icon {
+  font-size: 0.9em;
+}
+
+.menu-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Inherit from parent logic for WeWeb Link native elements */
 .menu-item {
   display: flex;
   align-items: center;
   text-decoration: none;
   padding: 10px 12px;
   border-radius: 8px;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
   cursor: pointer;
+  color: inherit;
 }
 
 .sidebar.is-collapsed .menu-item {
   justify-content: center;
+  padding: 10px;
 }
 
 .menu-item:hover {
-  background-color: rgba(0,0,0,0.04);
+  background-color: var(--hover-bg, rgba(0,0,0,0.04));
+}
+
+/* Selected state styling (optional enhancement) */
+.menu-item.router-link-active,
+.menu-item.ww-active-state {
+  background-color: rgba(59, 130, 246, 0.1); /* active color slight bg */
+}
+.menu-item.router-link-active .native-icon,
+.menu-item.ww-active-state .native-icon,
+.menu-item.router-link-active .item-text,
+.menu-item.ww-active-state .item-text {
+  color: var(--active-color) !important;
+  font-weight: 600;
 }
 
 .icon-wrapper {
@@ -209,18 +388,35 @@ export default {
   justify-content: center;
   width: 24px;
   height: 24px;
-}
-
-.icon-wrapper i {
-  font-size: 1.2em;
+  flex-shrink: 0;
 }
 
 .item-text {
-  margin-left: 16px;
+  margin-left: 14px;
   font-weight: 500;
   white-space: nowrap;
-  opacity: 1;
-  transition: opacity 0.2s;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.system-menu {
+  margin-top: auto;
+  padding: 16px var(--menu-padding);
+  border-top: 1px solid rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sidebar-bottom-zone {
+  min-height: 40px;
+  border-top: 1px dashed rgba(0,0,0,0.1);
+  padding-top: 12px;
+}
+
+.layout-zone {
+  width: 100%;
+  min-height: 100%;
 }
 
 /* TOPBAR (MOBILE) */
@@ -252,17 +448,29 @@ export default {
 .mobile-dropdown {
   display: flex;
   flex-direction: column;
-  padding: var(--menu-padding);
+  padding: 16px var(--menu-padding);
   border-top: 1px solid rgba(0,0,0,0.05);
   background-color: var(--menu-bg);
+  max-height: calc(100vh - 60px);
+  overflow-y: auto;
+  gap: 12px;
+}
+
+.mobile-category-title {
+  font-size: 0.8em;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin: 12px 12px 4px 12px;
+  opacity: 0.7;
 }
 
 .mobile-menu-item {
   display: flex;
   align-items: center;
-  padding: 14px 12px;
+  padding: 12px;
   text-decoration: none;
   border-radius: 6px;
+  color: inherit;
 }
 
 .mobile-menu-item:hover {
@@ -272,7 +480,12 @@ export default {
 .mobile-icon {
   width: 24px;
   text-align: center;
-  font-size: 1.2em;
+}
+
+.mobile-divider {
+  height: 1px;
+  background-color: rgba(0,0,0,0.05);
+  margin: 8px 0;
 }
 
 /* MAIN CONTENT */
@@ -286,7 +499,7 @@ export default {
 }
 
 .main-content.mobile-margin {
-  margin-top: 60px; /* Offset for topbar */
+  margin-top: 60px;
   height: calc(100vh - 60px);
 }
 
