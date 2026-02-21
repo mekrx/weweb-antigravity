@@ -13,6 +13,10 @@ export default {
         ]
     },
     properties: {
+        contentZone: {
+            type: 'Info',
+            editorOnly: true
+        },
         menuWidth: {
             label: { en: 'Menu Width (PC)', ru: 'Ширина меню (ПК)', pl: 'Szerokość menu (PC)' },
             type: 'Length',

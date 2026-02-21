@@ -2,6 +2,7 @@
   "name": "weweb-crm-section",
   "version": "1.0.0",
   "private": true,
+  "main": "ww-config.js",
   "weweb": {
     "type": "section"
   },
