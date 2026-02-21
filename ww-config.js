@@ -7,34 +7,31 @@ export default {
         },
         icon: 'layout',
         customStylePropertiesOrder: [
-            ['sidebarWidth', 'topbarHeight'],
+            ['sidebarWidth', 'sidebarCollapsedWidth', 'topbarHeight'],
             ['sidebarBgColor', 'topbarBgColor', 'contentBgColor', 'overlayColor']
         ]
     },
     properties: {
-        // Layour Zones mapped to Array arrays (hidden from properties panel)
-        sidebarZone: {
-            type: 'Array',
-            hidden: true,
-            defaultValue: []
-        },
-        topbarZone: {
-            type: 'Array',
-            hidden: true,
-            defaultValue: []
-        },
-        contentZone: {
-            type: 'Array',
-            hidden: true,
-            defaultValue: []
-        },
+        // Dropzones
+        menuToggleZone: { type: 'Array', hidden: true, defaultValue: [] },
+        topbarZone: { type: 'Array', hidden: true, defaultValue: [] },
+        sidebarZone: { type: 'Array', hidden: true, defaultValue: [] },
+        contentZone: { type: 'Array', hidden: true, defaultValue: [] },
 
         // Layout Dimensions
         sidebarWidth: {
-            label: { en: 'Sidebar Width', ru: 'Ширина боковой панели', pl: 'Szer. paska bocznego' },
+            label: { en: 'Sidebar Width (Expanded)', ru: 'Ширина боковой панели', pl: 'Szer. paska bocznego' },
             type: 'Length',
-            options: { unitChoices: [{ value: 'px', label: 'px', min: 60, max: 400 }] },
+            options: { unitChoices: [{ value: 'px', label: 'px', min: 100, max: 400 }] },
             defaultValue: '280px',
+            bindable: true,
+            responsive: true,
+        },
+        sidebarCollapsedWidth: {
+            label: { en: 'Sidebar Width (Collapsed)', ru: 'Свернутая ширина (только ПК)', pl: 'Zwinięta szeroka (PC)' },
+            type: 'Length',
+            options: { unitChoices: [{ value: 'px', label: 'px', min: 0, max: 200 }] },
+            defaultValue: '80px',
             bindable: true,
             responsive: true,
         },

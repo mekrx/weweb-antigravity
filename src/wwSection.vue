@@ -1,41 +1,36 @@
 <template>
   <div class="dashboard-layout" :style="cssVars">
-    <!-- Overlay for mobile sidebar -->
-    <div 
-      class="sidebar-overlay" 
-      v-if="isMobile && isSidebarOpen" 
-      @click="toggleSidebar"
-    ></div>
+    
+    <!-- TOPBAR (Full Width at Top) -->
+    <header class="topbar">
+      <!-- Universal Toggle Button Zone -->
+      <div class="toggle-wrapper" @click="toggleSidebar">
+        <!-- Render minimal height/width to make it easy to drop icons -->
+        <wwLayout path="menuToggleZone" direction="row" class="toggle-layout-zone" />
+      </div>
 
-    <!-- SIDEBAR -->
-    <aside 
-      class="sidebar" 
-      :class="{ 'is-open': !isMobile || isSidebarOpen }"
-    >
-      <wwLayout path="sidebarZone" direction="column" class="sidebar-layout-zone" />
-    </aside>
+      <!-- Main Topbar content (e.g Header Title, Profile, Actions) -->
+      <wwLayout path="topbarZone" direction="row" class="topbar-layout-zone" />
+    </header>
 
-    <!-- RIGHT PANEL (Topbar + Content) -->
-    <div class="right-panel">
-      <!-- TOPBAR -->
-      <header class="topbar">
-        <!-- Burger menu for mobile only -->
-        <button 
-          v-if="isMobile" 
-          class="burger-btn" 
-          @click="toggleSidebar"
-        >
-          <wwEditorIcon name="lucide:menu" />
-        </button>
-        <!-- Topbar Dropzone (e.g. Search, Profile) -->
-        <wwLayout path="topbarZone" direction="row" class="topbar-layout-zone" />
-      </header>
+    <!-- BOTTOM ROW (Sidebar + Content) -->
+    <div class="row-wrapper">
+      
+      <!-- Mobile Overlay -->
+      <div class="sidebar-overlay" v-if="isMobile && isMobileOpen" @click="toggleSidebar"></div>
+
+      <!-- SIDEBAR -->
+      <aside class="sidebar" :class="sidebarClasses">
+        <wwLayout path="sidebarZone" direction="column" class="sidebar-layout-zone" />
+      </aside>
 
       <!-- MAIN CONTENT -->
       <main class="main-content">
         <wwLayout path="contentZone" direction="column" class="content-layout-zone" />
       </main>
+      
     </div>
+
   </div>
 </template>
 
@@ -47,16 +42,24 @@ export default {
   data() {
     return {
       windowWidth: window.innerWidth,
-      isSidebarOpen: false
+      isPcCollapsed: false,
+      isMobileOpen: false
     };
   },
   computed: {
     isMobile() {
       return this.windowWidth < 992;
     },
+    sidebarClasses() {
+      return {
+        'is-pc-collapsed': !this.isMobile && this.isPcCollapsed,
+        'is-mobile-open': this.isMobile && this.isMobileOpen
+      };
+    },
     cssVars() {
       return {
         '--sidebar-width': this.content.sidebarWidth || '280px',
+        '--sidebar-collapsed-width': this.content.sidebarCollapsedWidth || '80px',
         '--topbar-height': this.content.topbarHeight || '70px',
         '--sidebar-bg': this.content.sidebarBgColor || '#ffffff',
         '--topbar-bg': this.content.topbarBgColor || '#ffffff',
@@ -74,20 +77,26 @@ export default {
   methods: {
     handleResize() {
       this.windowWidth = window.innerWidth;
-      if (!this.isMobile && this.isSidebarOpen) {
-        this.isSidebarOpen = false;
+      if (!this.isMobile && this.isMobileOpen) {
+        this.isMobileOpen = false; // Reset mobile state when expanding window
       }
     },
     toggleSidebar() {
-      this.isSidebarOpen = !this.isSidebarOpen;
+      if (this.isMobile) {
+        this.isMobileOpen = !this.isMobileOpen;
+      } else {
+        this.isPcCollapsed = !this.isPcCollapsed;
+      }
     }
   }
 };
 </script>
 
 <style scoped>
+/* MAIN CONTAINER */
 .dashboard-layout {
   display: flex;
+  flex-direction: column;
   width: 100vw;
   height: 100vh;
   overflow: hidden;
@@ -95,106 +104,114 @@ export default {
   background-color: var(--content-bg);
 }
 
-.sidebar {
-  width: var(--sidebar-width);
-  height: 100vh;
-  background-color: var(--sidebar-bg);
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  border-right: 1px solid rgba(0,0,0,0.05); /* Architect minimal look */
-  z-index: 10;
-  transition: transform 0.3s ease;
-}
-
-.right-panel {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  height: 100vh;
-}
-
+/* TOPBAR */
 .topbar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
   height: var(--topbar-height);
   background-color: var(--topbar-bg);
-  display: flex;
-  align-items: center;
-  padding: 0 24px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05); /* Minimal separator */
   flex-shrink: 0;
-  border-bottom: 1px solid rgba(0,0,0,0.05); /* Architect minimal look */
-  z-index: 5;
+  z-index: 20;
+  position: relative;
 }
 
-.burger-btn {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 8px;
-  margin-right: 16px;
-  margin-left: -8px;
+.toggle-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
-  color: inherit;
-  font-size: 24px;
+  height: 100%;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
 }
-.burger-btn:hover { background: rgba(0,0,0,0.05); }
-
-.main-content {
-  flex-grow: 1;
-  background-color: var(--content-bg);
-  overflow-y: auto;
-  overflow-x: hidden;
-  position: relative;
-  /* Minimal padding so user can drop content inside */
-  padding: 32px;
+.toggle-wrapper:hover {
+  background-color: rgba(0,0,0,0.03);
 }
 
-/* Base states for layout zones to make them fill available space */
-.sidebar-layout-zone {
-  min-height: 100%;
-  width: 100%;
+.toggle-layout-zone {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0 16px;
 }
 
 .topbar-layout-zone {
   flex-grow: 1;
-  min-height: 100%;
-  width: 100%;
   display: flex;
-  flex-direction: row;
   align-items: center;
-}
-
-.content-layout-zone {
-  min-height: 100%;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Sub-elements gap handling inside layout dropzones (optional, makes it cleaner default) */
-.sidebar-layout-zone > *,
-.content-layout-zone > * {
-  margin-bottom: 16px;
+  height: 100%;
+  padding-right: 24px;
 }
 .topbar-layout-zone > * {
   margin-right: 16px;
 }
 
-/* Custom Scrollbars */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.25); }
+/* BOTTOM SECTION (Sidebar + Content) */
+.row-wrapper {
+  display: flex;
+  flex-direction: row;
+  flex-grow: 1;
+  height: calc(100vh - var(--topbar-height));
+  position: relative;
+  overflow: hidden;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: var(--sidebar-width);
+  height: 100%;
+  background-color: var(--sidebar-bg);
+  border-right: 1px solid rgba(0, 0, 0, 0.05); /* Minimal separator */
+  flex-shrink: 0;
+  z-index: 10;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-y: auto;
+  overflow-x: hidden; /* Important so inner custom text hides when shrinking */
+}
+
+/* SIDEBAR COLLAPSED (PC) */
+.sidebar.is-pc-collapsed {
+  width: var(--sidebar-collapsed-width);
+}
+
+.sidebar-layout-zone {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100%;
+}
+.sidebar-layout-zone > * {
+  margin-bottom: 12px;
+}
+
+/* MAIN CONTENT */
+.main-content {
+  flex-grow: 1;
+  background-color: var(--content-bg);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 32px;
+  position: relative;
+}
+
+.content-layout-zone {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100%;
+}
+.content-layout-zone > * {
+  margin-bottom: 16px;
+}
 
 /* MOBILE RESPONSIVENESS */
 @media (max-width: 991px) {
   .sidebar {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
     bottom: 0;
@@ -202,25 +219,28 @@ export default {
     box-shadow: 2px 0 12px rgba(0,0,0,0.1);
     z-index: 100;
   }
-  .sidebar.is-open {
+  
+  .sidebar.is-mobile-open {
     transform: translateX(0);
   }
   
   .sidebar-overlay {
-    position: fixed;
+    position: absolute;
     inset: 0;
     background-color: var(--overlay-bg, rgba(0,0,0,0.4));
     z-index: 90;
     opacity: 1;
     transition: opacity 0.3s ease;
   }
-  
-  .topbar {
-    padding: 0 16px;
-  }
-  
+
   .main-content {
     padding: 16px;
   }
 }
+
+/* Custom Scrollbars */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.25); }
 </style>
