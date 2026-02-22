@@ -22,7 +22,12 @@
     </div>
 
     <!-- SIDEBAR -->
-    <aside class="sidebar" :class="sidebarClasses">
+    <aside 
+      class="sidebar" 
+      :class="sidebarClasses"
+      @mouseenter="handleSidebarMouseEnter"
+      @mouseleave="handleSidebarMouseLeave"
+    >
       <wwLayout path="sidebarZone" direction="column" class="sidebar-layout-zone" />
     </aside>
 
@@ -66,28 +71,18 @@ export default {
   },
   mounted() {
     window.addEventListener('resize', this.handleResize);
-    if (this.isMobile && this.content.isMobileMenuOpen) {
-      document.body.style.setProperty('overflow', 'hidden', 'important');
-    }
+    this.checkScrollLock();
   },
   unmounted() {
     window.removeEventListener('resize', this.handleResize);
-    document.body.style.overflow = '';
+    this.unlockScroll();
   },
   watch: {
-    'content.isMobileMenuOpen'(isOpen) {
-      if (isOpen && this.isMobile) {
-        document.body.style.setProperty('overflow', 'hidden', 'important');
-      } else {
-        document.body.style.overflow = '';
-      }
+    'content.isMobileMenuOpen'() {
+      this.checkScrollLock();
     },
-    isMobile(isMob) {
-      if (isMob && this.content.isMobileMenuOpen) {
-        document.body.style.setProperty('overflow', 'hidden', 'important');
-      } else {
-        document.body.style.overflow = '';
-      }
+    isMobile() {
+      this.checkScrollLock();
     }
   },
   methods: {
@@ -100,6 +95,29 @@ export default {
       this.$emit('trigger-event', { name: 'overlayClick' });
       // 2. We emit a dedicated variable update request (this specific Vue 3 syntax $emit('update:content:prop') works safely in WeWeb to update a bound variable without dropping it)
       this.$emit('update:content:isMobileMenuOpen', false);
+    },
+    handleSidebarMouseEnter() {
+      if (!this.isMobile) {
+        this.lockScroll();
+      }
+    },
+    handleSidebarMouseLeave() {
+      if (!this.isMobile) {
+        this.unlockScroll();
+      }
+    },
+    checkScrollLock() {
+      if (this.isMobile && this.content.isMobileMenuOpen) {
+        this.lockScroll();
+      } else {
+        this.unlockScroll();
+      }
+    },
+    lockScroll() {
+      document.body.style.setProperty('overflow', 'hidden', 'important');
+    },
+    unlockScroll() {
+      document.body.style.overflow = '';
     }
   }
 };
