@@ -65,9 +65,29 @@ export default {
   },
   mounted() {
     window.addEventListener('resize', this.handleResize);
+    if (this.isMobile && this.content.isMobileMenuOpen) {
+      document.body.style.setProperty('overflow', 'hidden', 'important');
+    }
   },
   unmounted() {
     window.removeEventListener('resize', this.handleResize);
+    document.body.style.overflow = '';
+  },
+  watch: {
+    'content.isMobileMenuOpen'(isOpen) {
+      if (isOpen && this.isMobile) {
+        document.body.style.setProperty('overflow', 'hidden', 'important');
+      } else {
+        document.body.style.overflow = '';
+      }
+    },
+    isMobile(isMob) {
+      if (isMob && this.content.isMobileMenuOpen) {
+        document.body.style.setProperty('overflow', 'hidden', 'important');
+      } else {
+        document.body.style.overflow = '';
+      }
+    }
   },
   methods: {
     handleResize() {
@@ -75,9 +95,10 @@ export default {
     },
     closeMobileMenu(e) {
       if (e) { e.stopPropagation(); }
-      // Emit trigger event. The user MUST use a WeWeb Workflow attached to 'On Mobile Overlay Click' to change their bound variable to False.
-      // We no longer mutate `this.content` directly to prevent WeWeb from severing external variable bindings.
+      // 1. We emit purely for custom Workflows triggers 
       this.$emit('trigger-event', { name: 'overlayClick' });
+      // 2. We emit a dedicated variable update request (this specific Vue 3 syntax $emit('update:content:prop') works safely in WeWeb to update a bound variable without dropping it)
+      this.$emit('update:content:isMobileMenuOpen', false);
     }
   }
 };
