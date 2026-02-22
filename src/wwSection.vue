@@ -75,10 +75,9 @@ export default {
     },
     closeMobileMenu(e) {
       if (e) { e.stopPropagation(); }
-      // 1. Emit purely for custom Workflows triggers (e.g user sets "On Mobile Overlay Click -> Change Variable to FALSE")
+      // Emit trigger event. The user MUST use a WeWeb Workflow attached to 'On Mobile Overlay Click' to change their bound variable to False.
+      // We no longer mutate `this.content` directly to prevent WeWeb from severing external variable bindings.
       this.$emit('trigger-event', { name: 'overlayClick' });
-      // 2. Attempt hard override inside the plugin content object (Often works directly in editor)
-      this.$emit('update:content', { ...this.content, isMobileMenuOpen: false });
     }
   }
 };
@@ -92,7 +91,7 @@ export default {
   left: 0;
   width: 100vw;
   height: 0;
-  z-index: 1000;
+  z-index: 9000; /* Extremely high z-index to ensure it floats over all data panels but under native WeWeb editor modals */
   font-family: inherit;
   pointer-events: none;
 }
