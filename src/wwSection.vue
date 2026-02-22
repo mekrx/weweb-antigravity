@@ -16,9 +16,10 @@
     <div 
       class="sidebar-overlay" 
       v-if="isMobile && content.isMobileMenuOpen" 
-      @mousedown.prevent="closeMobileMenu"
-      @touchstart.prevent="closeMobileMenu"
-    ></div>
+      @click="closeMobileMenu"
+    >
+      <wwLayout path="overlayZone" class="overlay-layout-zone" />
+    </div>
 
     <!-- SIDEBAR -->
     <aside class="sidebar" :class="sidebarClasses">
@@ -170,6 +171,7 @@ export default {
   left: 0;
   width: var(--sidebar-width);
   height: calc(100vh - var(--topbar-height));
+  height: calc(100dvh - var(--topbar-height));
   background-color: var(--sidebar-bg);
   border-right: 1px solid rgba(0, 0, 0, 0.05);
   box-sizing: border-box;
@@ -203,6 +205,13 @@ export default {
   opacity: 1;
   transition: opacity var(--anim-duration) var(--anim-timing);
   cursor: pointer;
+  display: flex;
+}
+
+.overlay-layout-zone {
+  flex-grow: 1;
+  width: 100%;
+  height: 100%;
 }
 
 /* MOBILE RESPONSIVENESS */
@@ -211,6 +220,7 @@ export default {
     /* Menu starts below topbar and takes remaining height on mobile too */
     top: var(--topbar-height);
     height: calc(100vh - var(--topbar-height));
+    height: calc(100dvh - var(--topbar-height));
     transform: translateX(-100%);
     box-shadow: 2px 0 12px rgba(0,0,0,0.1);
     z-index: 1000; /* Stack explicitly UNDER the topbar (1005) */

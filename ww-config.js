@@ -20,6 +20,7 @@ export default {
         menuToggleZone: { type: 'Array', hidden: true, defaultValue: [] },
         topbarZone: { type: 'Array', hidden: true, defaultValue: [] },
         sidebarZone: { type: 'Array', hidden: true, defaultValue: [] },
+        overlayZone: { type: 'Array', hidden: true, defaultValue: [] },
 
         // State variables explicitly exposed for Workflows
         isSidebarCollapsed: {
