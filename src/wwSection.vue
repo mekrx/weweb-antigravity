@@ -17,6 +17,8 @@
       class="sidebar-overlay" 
       v-if="isMobile && content.isMobileMenuOpen" 
       @click="closeMobileMenu"
+      @touchmove.prevent
+      @wheel.prevent
     >
       <wwLayout path="overlayZone" class="overlay-layout-zone" />
     </div>
@@ -100,9 +102,15 @@ export default {
     },
     lockScroll() {
       document.body.style.setProperty('overflow', 'hidden', 'important');
+      document.documentElement.style.setProperty('overflow', 'hidden', 'important');
+      const appEl = document.getElementById('app');
+      if(appEl) appEl.style.setProperty('overflow', 'hidden', 'important');
     },
     unlockScroll() {
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      const appEl = document.getElementById('app');
+      if(appEl) appEl.style.overflow = '';
     }
   }
 };
@@ -183,6 +191,7 @@ export default {
   transition: width var(--anim-duration) var(--anim-timing), transform var(--anim-duration) var(--anim-timing);
   overflow-y: auto;
   overflow-x: hidden; 
+  overscroll-behavior: contain;
   white-space: nowrap; 
 }
 
@@ -212,6 +221,7 @@ export default {
   transition: opacity var(--anim-duration) var(--anim-timing);
   cursor: pointer;
   display: flex;
+  overscroll-behavior: none;
 }
 
 .overlay-layout-zone {
