@@ -318,22 +318,20 @@ export default {
       if (!link) return;
       try {
         if (link.pageId && typeof wwLib !== 'undefined') {
-          // Check if we're already on this page
+          // Check if already on this page
           const curPageId = wwLib?.wwWebsiteData?.page?.id || wwLib?.wwApp?.page?.id;
-          if (curPageId === link.pageId) {
-            // Same page — don't navigate, just handle query (adminTab etc)
-            return;
+          if (curPageId === link.pageId) return; // Same page, skip
+
+          // Build query object for wwLib.goTo(pageId, queryObj)
+          const queryObj = {};
+          if (Array.isArray(link.query)) {
+            link.query.forEach(q => { if (q.name) queryObj[q.name] = q.value; });
           }
-          // Different page — use goTo for SPA navigation (no full reload)
-          const goTo = wwLib.wwApp?.goTo || wwLib.goTo;
-          if (goTo) {
-            goTo(link.pageId);
-            // Apply query params after SPA nav
-            let qs = '';
-            if (Array.isArray(link.query) && link.query.length) {
-              qs = '?' + link.query.map(q => encodeURIComponent(q.name) + '=' + encodeURIComponent(q.value)).join('&');
-            }
-            if (qs) setTimeout(() => { window.history.replaceState(null, '', window.location.pathname + qs); }, 200);
+
+          // Use wwLib.goTo (NOT wwLib.wwApp.goTo — that's deprecated and broken)
+          // Per WeWeb docs: wwLib.goTo('page_uuid', {queryName: 'queryValue'})
+          if (wwLib.goTo) {
+            wwLib.goTo(link.pageId, Object.keys(queryObj).length ? queryObj : undefined);
             return;
           }
         }
