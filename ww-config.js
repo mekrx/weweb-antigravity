@@ -9,7 +9,7 @@ export default {
             ['sidebarWidth', 'sidebarCollapsedWidth', 'topbarHeight'],
             ['animationDuration'],
             ['sidebarTitle', 'sidebarTitleSize'],
-            ['showUserBlock', 'logoutLabel'],
+            ['showUserBlock', 'logoutLabel', 'logoutRedirect'],
             ['navIconSize'],
             ['navItems'],
         ]
@@ -42,6 +42,7 @@ export default {
 
         showUserBlock: { label: { en: 'Show user block' }, type: 'OnOff', defaultValue: true, bindable: true },
         logoutLabel: { label: { en: 'Logout text' }, type: 'Text', defaultValue: 'Wyloguj', bindable: true },
+        logoutRedirect: { label: { en: 'Logout redirect page' }, type: 'Link', bindable: true },
         navIconSize: { label: { en: 'Nav icon size' }, type: 'Length', options: { unitChoices: [{ value: 'px', label: 'px', min: 10, max: 32 }] }, defaultValue: '18px', bindable: true, responsive: true },
 
         // === FLAT NAV LIST — one level, type determines behavior ===

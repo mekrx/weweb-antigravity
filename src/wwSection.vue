@@ -281,6 +281,8 @@ export default {
     async doLogout() {
       this.$emit('trigger-event', { name: 'logout' });
       if (this.supabase) try { await this.supabase.auth.signOut(); } catch (e) {}
+      const link = this.content.logoutRedirect;
+      if (link) this.navigateTo(link);
     },
   },
 };
