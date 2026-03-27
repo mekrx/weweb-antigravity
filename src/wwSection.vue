@@ -193,6 +193,12 @@ export default {
     onNavClick(item, i) {
       this.$emit('trigger-event', { name: 'navClick', event: { url: item.link?.href || '', label: item.label, index: i } });
       if (this.isMobile) this.closeMobile();
+      // Send adminTab via localStorage + CustomEvent before navigation
+      const adminTab = item.link?.query?.adminTab;
+      if (adminTab) {
+        localStorage.setItem('pendingAdminTab', adminTab);
+        window.dispatchEvent(new CustomEvent('admin-set-tab', { detail: { adminTab } }));
+      }
       if (item.link) this.navigateTo(item.link);
     },
     navigateTo(link) {
