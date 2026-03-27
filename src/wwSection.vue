@@ -174,37 +174,14 @@ export default {
     _buildPagesMap() {
       this._pagesMap = {};
       try {
-        if (typeof wwLib === 'undefined') return;
-        // Collect all possible page sources
-        const candidates = [];
-        try { if (wwLib.wwWebsiteData?.pages) candidates.push({ src: 'wwWebsiteData.pages', data: wwLib.wwWebsiteData.pages }); } catch(e){}
-        try { if (wwLib.wwApp?.pages) candidates.push({ src: 'wwApp.pages', data: wwLib.wwApp.pages }); } catch(e){}
-        try { if (wwLib.wwWebsiteData?.design?.pages) candidates.push({ src: 'design.pages', data: wwLib.wwWebsiteData.design.pages }); } catch(e){}
-        try {
-          // Try to find pages in the Vue app's store
-          const app = document.querySelector('#app')?.__vue_app__;
-          const store = app?.config?.globalProperties?.$store;
-          if (store) {
-            const sp = store.getters?.['websiteData/getPages'] || store.state?.websiteData?.pages;
-            if (sp) candidates.push({ src: 'vuex-store', data: sp });
-          }
-        } catch(e){}
-
-        for (const { src, data } of candidates) {
-          if (!data) continue;
-          const entries = Array.isArray(data) ? data : (typeof data === 'object' ? Object.values(data) : []);
-          for (const p of entries) {
-            if (!p || typeof p !== 'object') continue;
-            const id = p.id || p.uid;
-            const path = p.paths?.default || p.path || p.linkId || p.slug || p.name || '';
-            if (id && path) this._pagesMap[id] = path;
-          }
-          if (Object.keys(this._pagesMap).length) {
-            console.log('[Menu] pages map built from', src, ':', Object.keys(this._pagesMap).length, 'pages');
-            return;
+        if (typeof wwLib === 'undefined' || !wwLib.wwWebsiteData?.getPages) return;
+        const pages = wwLib.wwWebsiteData.getPages();
+        if (!Array.isArray(pages)) return;
+        for (const p of pages) {
+          if (p.id && p.paths?.default) {
+            this._pagesMap[p.id] = p.paths.default;
           }
         }
-        console.warn('[Menu] No pages found. Candidates checked:', candidates.map(c => c.src));
       } catch (e) { console.warn('[Menu] _buildPagesMap error:', e); }
     },
     _getPagePath(pageId) {
@@ -260,7 +237,7 @@ export default {
     isNavActive(item) {
       if (!item.link) return false;
       try {
-        const curId = wwLib?.wwWebsiteData?.page?.id || wwLib?.wwApp?.page?.id || null;
+        const curId = wwLib?.wwWebsiteData?.getCurrentPageId?.() || null;
         if (!curId || item.link.pageId !== curId) return false;
 
         // Page matches — now check if this item has adminTab query
@@ -319,7 +296,7 @@ export default {
       try {
         if (link.pageId && typeof wwLib !== 'undefined') {
           // Check if already on this page
-          const curPageId = wwLib?.wwWebsiteData?.page?.id || wwLib?.wwApp?.page?.id;
+          const curPageId = wwLib?.wwWebsiteData?.getCurrentPageId?.();
           if (curPageId === link.pageId) return; // Same page, skip
 
           // Build query object for wwLib.goTo(pageId, queryObj)
