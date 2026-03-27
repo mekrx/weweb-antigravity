@@ -299,16 +299,20 @@ export default {
           const curPageId = wwLib?.wwWebsiteData?.getCurrentPageId?.();
           if (curPageId === link.pageId) return; // Same page, skip
 
-          // Build query object for wwLib.goTo(pageId, queryObj)
+          // Resolve pageId to path (e.g. 'home', 'admin-panel')
+          const pagePath = this._getPagePath(link.pageId);
+          if (!pagePath) return;
+
+          // Build query object
           const queryObj = {};
           if (Array.isArray(link.query)) {
             link.query.forEach(q => { if (q.name) queryObj[q.name] = q.value; });
           }
 
-          // wwLib.goTo is DEPRECATED — use wwLib.wwApp.goTo which resolves pageId to proper path
-          const goTo = wwLib.wwApp?.goTo || wwLib.goTo;
+          // wwLib.wwApp.goTo expects a PATH string, not a pageId
+          const goTo = wwLib.wwApp?.goTo;
           if (goTo) {
-            goTo(link.pageId, Object.keys(queryObj).length ? queryObj : undefined);
+            goTo(pagePath, Object.keys(queryObj).length ? queryObj : undefined);
             return;
           }
         }
