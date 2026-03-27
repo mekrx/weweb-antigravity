@@ -260,24 +260,33 @@ export default {
     isNavActive(item) {
       if (!item.link) return false;
       try {
-        // Get current page id
         const curId = wwLib?.wwWebsiteData?.page?.id || wwLib?.wwApp?.page?.id || null;
-        if (curId && item.link.pageId === curId) {
-          const q = item.link.query;
-          const itemTab = Array.isArray(q) ? q.find(x => x.name === 'adminTab')?.value : q?.adminTab;
-          if (itemTab) {
-            const urlTab = new URLSearchParams(window.location.search).get('adminTab');
-            return urlTab === itemTab;
-          }
-          // Page matches and no specific tab — active only if no other item with same pageId+tab is active
-          return true;
+        if (!curId || item.link.pageId !== curId) return false;
+
+        // Page matches — now check if this item has adminTab query
+        const q = item.link.query;
+        const itemTab = Array.isArray(q) ? q.find(x => x.name === 'adminTab')?.value : null;
+
+        // Check if ANY sibling item for this page has adminTab queries
+        const hasTabSiblings = this.flatNav.some(n =>
+          n.link?.pageId === curId && Array.isArray(n.link?.query) && n.link.query.some(qq => qq.name === 'adminTab')
+        );
+
+        if (itemTab) {
+          // This item has a specific tab — match against URL or localStorage
+          const urlTab = new URLSearchParams(window.location.search).get('adminTab');
+          const pendingTab = localStorage.getItem('pendingAdminTab');
+          return (urlTab || pendingTab) === itemTab;
         }
-        // Fallback: match by path
-        const path = this._getPagePath(item.link.pageId);
-        if (path) {
-          const cur = window.location.pathname;
-          return cur === path || cur === path + '/';
+
+        // This item has NO tab query — active only if no tab-siblings exist OR no tab is selected
+        if (hasTabSiblings) {
+          const urlTab = new URLSearchParams(window.location.search).get('adminTab');
+          const pendingTab = localStorage.getItem('pendingAdminTab');
+          return !urlTab && !pendingTab;
         }
+
+        return true;
       } catch (e) {}
       return false;
     },
@@ -287,36 +296,44 @@ export default {
     onNavClick(item, i) {
       this.$emit('trigger-event', { name: 'navClick', event: { url: item.link?.href || '', label: item.label, index: i } });
       if (this.isMobile) this.closeMobile();
+
       const q = item.link?.query;
-      const adminTab = Array.isArray(q) ? q.find(x => x.name === 'adminTab')?.value : q?.adminTab;
+      const adminTab = Array.isArray(q) ? q.find(x => x.name === 'adminTab')?.value : null;
+
       if (adminTab) {
         localStorage.setItem('pendingAdminTab', adminTab);
         window.dispatchEvent(new CustomEvent('admin-set-tab', { detail: { adminTab } }));
+        // Update URL query without reload
+        const url = window.location.pathname + '?adminTab=' + encodeURIComponent(adminTab);
+        window.history.replaceState(null, '', url);
       }
+
+      // Navigate (navigateTo will skip if already on same page)
       if (item.link) this.navigateTo(item.link);
+
+      // Force re-render for active state
+      this.$forceUpdate();
     },
     navigateTo(link) {
       if (!link) return;
       try {
         if (link.pageId && typeof wwLib !== 'undefined') {
-          let qs = '';
-          if (Array.isArray(link.query) && link.query.length) {
-            qs = '?' + link.query.map(q => encodeURIComponent(q.name) + '=' + encodeURIComponent(q.value)).join('&');
-          }
-          // Try to resolve page path
-          const path = this._getPagePath(link.pageId);
-          if (path) {
-            const url = path + (path.endsWith('/') ? '' : '/') + qs;
-            console.log('[Menu] navigating to path:', url);
-            window.location.href = url;
+          // Check if we're already on this page
+          const curPageId = wwLib?.wwWebsiteData?.page?.id || wwLib?.wwApp?.page?.id;
+          if (curPageId === link.pageId) {
+            // Same page — don't navigate, just handle query (adminTab etc)
             return;
           }
-          // Fallback: goTo with pageId
-          console.warn('[Menu] path not found for', link.pageId, '— using goTo. Pages map:', JSON.stringify(this._pagesMap));
+          // Different page — use goTo for SPA navigation (no full reload)
           const goTo = wwLib.wwApp?.goTo || wwLib.goTo;
           if (goTo) {
             goTo(link.pageId);
-            if (qs) setTimeout(() => { window.history.replaceState(null, '', window.location.pathname + qs); }, 150);
+            // Apply query params after SPA nav
+            let qs = '';
+            if (Array.isArray(link.query) && link.query.length) {
+              qs = '?' + link.query.map(q => encodeURIComponent(q.name) + '=' + encodeURIComponent(q.value)).join('&');
+            }
+            if (qs) setTimeout(() => { window.history.replaceState(null, '', window.location.pathname + qs); }, 200);
             return;
           }
         }
