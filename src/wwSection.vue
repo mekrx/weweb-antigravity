@@ -93,26 +93,36 @@
     <!-- User profile modal -->
     <div v-if="showUserModal" class="um-overlay" @click.self="showUserModal = false">
       <div class="um-modal">
+        <button class="um-close" @click="showUserModal = false">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
         <div class="um-header">
           <div class="um-avatar-lg">{{ userInitials }}</div>
           <div class="um-header-info">
             <div class="um-name">{{ userName || '—' }}</div>
             <div class="um-email">{{ userEmail || '—' }}</div>
             <div v-if="userCreatedAt" class="um-meta">Konto od: {{ userCreatedAt }}</div>
+            <div v-if="userStatus" class="um-meta">Status: <span :class="'um-status-' + userStatus">{{ userStatus }}</span></div>
           </div>
-          <button class="um-close" @click="showUserModal = false">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-          </button>
         </div>
         <div v-if="userRoles.length" class="um-section">
-          <div class="um-section-title">Role</div>
-          <div class="um-roles"><span v-for="r in userRoles" :key="r" class="um-role-badge">{{ r }}</span></div>
+          <div class="um-section-title">Wydane role</div>
+          <div class="um-roles"><span v-for="r in userRoles" :key="r.name" class="um-role-badge" :style="r.bg ? {background:r.bg,color:r.fg} : {}">{{ r.name }}</span></div>
+        </div>
+        <div v-if="userPermissions.length" class="um-section">
+          <div class="um-section-title">Uprawnienia</div>
+          <div class="um-perms-list">
+            <div v-for="p in userPermissions" :key="p.table" class="um-perm-row">
+              <span class="um-perm-table">{{ p.table }}</span>
+              <span v-for="a in p.actions" :key="a" class="um-perm-badge" :class="'um-action-'+a">{{ a === 'all' ? 'ALL' : a.toUpperCase() }}</span>
+            </div>
+          </div>
         </div>
         <div v-if="userDepts.length" class="um-section">
-          <div class="um-section-title">Oddziały</div>
+          <div class="um-section-title">Dostępne oddziały</div>
           <div class="um-depts"><span v-for="d in userDepts" :key="d" class="um-dept-badge">{{ d }}</span></div>
         </div>
-        <div v-if="!userRoles.length && !userDepts.length" class="um-section">
+        <div v-if="!userRoles.length && !userDepts.length && !userPermissions.length" class="um-section">
           <div class="um-empty">Brak przypisanych ról i oddziałów</div>
         </div>
       </div>
@@ -131,8 +141,8 @@ export default {
       currentTheme: 'dark',
       sidebarCollapsed: false,
       collapsedSections: {},
-      supabase: null, userName: '', userEmail: '', userCreatedAt: '',
-      userRoles: [], userDepts: [],
+      supabase: null, userName: '', userEmail: '', userCreatedAt: '', userStatus: '',
+      userRoles: [], userDepts: [], userPermissions: [],
       showUserModal: false,
       resolvedIcons: {},
       _initBusy: false,
@@ -189,17 +199,53 @@ export default {
     this.initSupa();
     this.resolveAllIcons();
     this._buildPagesMap();
+    this._initTooltips();
     setTimeout(() => { if (!this.supabase) this.initSupa(); }, 1500);
   },
   unmounted() {
     window.removeEventListener('resize', this.onResize);
     window.removeEventListener('storage', this.onStorage);
     window.removeEventListener('popstate', this.onPopState);
+    this._destroyTooltips();
     this.unlockScroll();
     document.body.style.paddingLeft = '';
     document.body.style.paddingTop = '';
   },
   methods: {
+    /* Floating tooltips — appended to body to escape overflow:hidden */
+    _initTooltips() {
+      this._tooltipEl = document.createElement('div');
+      this._tooltipEl.className = 'menu-tooltip';
+      this._tooltipEl.style.opacity = '0';
+      document.body.appendChild(this._tooltipEl);
+      this._onTtOver = (e) => {
+        const btn = e.target.closest('[data-tooltip]');
+        if (!btn || !btn.dataset.tooltip) return;
+        const rect = btn.getBoundingClientRect();
+        const tt = this._tooltipEl;
+        const isDark = this.currentTheme === 'dark';
+        tt.textContent = btn.dataset.tooltip;
+        tt.style.background = isDark ? '#1c1c20' : '#fff';
+        tt.style.color = isDark ? '#f0f0f0' : '#1a1a1e';
+        tt.style.borderColor = isDark ? '#27272a' : '#e4e4e7';
+        tt.style.left = (rect.right + 8) + 'px';
+        tt.style.top = (rect.top + rect.height / 2) + 'px';
+        tt.style.transform = 'translateY(-50%)';
+        tt.style.opacity = '1';
+      };
+      this._onTtOut = (e) => {
+        const btn = e.target.closest('[data-tooltip]');
+        if (btn) this._tooltipEl.style.opacity = '0';
+      };
+      this.$el.addEventListener('mouseenter', this._onTtOver, true);
+      this.$el.addEventListener('mouseleave', this._onTtOut, true);
+    },
+    _destroyTooltips() {
+      if (this._tooltipEl) { this._tooltipEl.remove(); this._tooltipEl = null; }
+      if (this._onTtOver) this.$el.removeEventListener('mouseenter', this._onTtOver, true);
+      if (this._onTtOut) this.$el.removeEventListener('mouseleave', this._onTtOut, true);
+    },
+
     /* Build pageId -> path map from wwLib */
     _buildPagesMap() {
       this._pagesMap = {};
@@ -418,8 +464,32 @@ export default {
     async loadUserRoles(userId) {
       if (!this.supabase || !userId) return;
       try {
+        // Get user profile (status, oddzial)
+        const { data: profile } = await this.supabase.from('managers').select('status,oddzial').eq('auth_id', userId).single();
+        if (profile) this.userStatus = profile.status || '';
+
+        // Get roles with colors
         const { data: ur } = await this.supabase.from('users_roles').select('role').eq('user_id', userId);
-        if (ur) this.userRoles = ur.map(r => r.role);
+        const roleNames = ur ? ur.map(r => r.role) : [];
+        // Get role colors
+        const { data: rolesData } = await this.supabase.from('roles').select('name,color_bg,color_fg').in('name', roleNames.length ? roleNames : ['__none__']);
+        const colorMap = {};
+        if (rolesData) rolesData.forEach(r => { colorMap[r.name] = { bg: r.color_bg, fg: r.color_fg }; });
+        this.userRoles = roleNames.map(n => ({ name: n, bg: colorMap[n]?.bg || '', fg: colorMap[n]?.fg || '' }));
+
+        // Get permissions via role_permissions
+        const { data: perms } = await this.supabase.from('role_permissions').select('table_name,actions').in('role_name', roleNames.length ? roleNames : ['__none__']);
+        if (perms) {
+          const permMap = {};
+          for (const p of perms) {
+            if (!permMap[p.table_name]) permMap[p.table_name] = new Set();
+            const acts = Array.isArray(p.actions) ? p.actions : [p.actions];
+            acts.forEach(a => permMap[p.table_name].add(a));
+          }
+          this.userPermissions = Object.entries(permMap).map(([table, acts]) => ({ table, actions: [...acts].sort() }));
+        }
+
+        // Get departments
         const { data: ud } = await this.supabase.from('users_roles').select('oddzial:oddzialy(name)').eq('user_id', userId).not('oddzial_id', 'is', null);
         if (ud) this.userDepts = [...new Set(ud.map(d => d.oddzial?.name).filter(Boolean))];
       } catch (e) { console.warn('[Menu] loadUserRoles:', e); }
@@ -491,9 +561,9 @@ export default {
 .sidebar.collapsed .nav-btn{justify-content:center;padding:10px}
 
 /* Theme row — same padding zone as nav via margin matching sb-nav padding */
-.theme-row{margin:0 8px 4px;border:1px solid var(--brd);color:var(--tx3)}
+.theme-row{margin:0 8px 4px;width:calc(100% - 16px);border:1px solid var(--brd);color:var(--tx3)}
 .theme-row:hover{border-color:var(--acc);color:var(--tx);background:var(--acc-h)}
-.sidebar.collapsed .theme-row{margin:0 8px 4px}
+.sidebar.collapsed .theme-row{margin:0 8px 4px;width:calc(100% - 16px)}
 
 /* Icon */
 .nav-icon{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;opacity:.75;line-height:0}
@@ -540,26 +610,31 @@ export default {
 /* Mobile */
 @media(max-width:991px){.sidebar.mobileOpen .nav-label,.sidebar.mobileOpen .user-info,.sidebar.mobileOpen .sb-extra{opacity:1!important;width:auto!important}}
 
-/* Custom tooltips — fast, positioned right of sidebar */
-[data-tooltip]{position:relative}
-[data-tooltip]::after{content:attr(data-tooltip);position:absolute;left:100%;top:50%;transform:translateY(-50%);margin-left:8px;padding:5px 10px;border-radius:6px;background:var(--card,#1c1c20);color:var(--tx,#f0f0f0);font-size:12px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 120ms ease;z-index:10001;border:1px solid var(--brd,#27272a);box-shadow:0 2px 8px rgba(0,0,0,0.25)}
-[data-tooltip]:hover::after{opacity:1}
+/* Tooltip element (created by JS, appended to body) */
+.menu-tooltip{position:fixed;padding:5px 10px;border-radius:6px;font-size:12px;white-space:nowrap;pointer-events:none;z-index:10002;border:1px solid;box-shadow:0 2px 8px rgba(0,0,0,0.25);transition:opacity 80ms ease;font-family:'Inter',-apple-system,sans-serif}
 
 /* User profile modal */
 .um-overlay{position:fixed;inset:0;background:var(--ov-bg);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;justify-content:center;align-items:center;z-index:10001;pointer-events:auto}
-.um-modal{background:var(--sb-bg);border:1px solid var(--brd);border-radius:12px;padding:24px;width:380px;max-width:90vw;max-height:85vh;overflow-y:auto;animation:fadeIn 200ms var(--ease)}
-.um-header{display:flex;align-items:center;gap:14px;margin-bottom:20px}
+.um-modal{position:relative;background:var(--sb-bg);border:1px solid var(--brd);border-radius:12px;padding:24px;width:440px;max-width:90vw;max-height:85vh;overflow-y:auto;animation:fadeIn 200ms var(--ease)}
+.um-close{position:absolute;top:12px;right:12px;width:28px;height:28px;border-radius:6px;background:transparent;border:1px solid var(--brd);color:var(--tx3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 200ms;z-index:1}
+.um-close:hover{border-color:var(--acc);color:var(--tx)}
+.um-header{display:flex;align-items:center;gap:14px;margin-bottom:20px;padding-right:36px}
 .um-avatar-lg{width:48px;height:48px;border-radius:50%;background:var(--acc);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0}
 .um-header-info{flex:1;min-width:0}
 .um-name{font-size:16px;font-weight:700;color:var(--tx)}
 .um-email{font-size:12px;color:var(--tx3);margin-top:2px}
 .um-meta{font-size:11px;color:var(--tx4);margin-top:4px}
-.um-close{width:28px;height:28px;border-radius:6px;background:transparent;border:1px solid var(--brd);color:var(--tx3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 200ms;flex-shrink:0}
-.um-close:hover{border-color:var(--acc);color:var(--tx)}
+.um-status-active{color:#22c55e}.um-status-vacation{color:#4B8765}.um-status-inactive{color:#eab308}.um-status-terminated{color:#ef4444}
 .um-section{margin-bottom:16px}
 .um-section-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--tx4);margin-bottom:8px}
 .um-roles,.um-depts{display:flex;flex-wrap:wrap;gap:6px}
-.um-role-badge{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;background:var(--n-active-bg);color:var(--n-active)}
+.um-role-badge{padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;background:var(--n-active-bg);color:var(--n-active);text-transform:uppercase}
 .um-dept-badge{padding:4px 10px;border-radius:6px;font-size:12px;background:var(--brd);color:var(--tx2)}
+.um-perms-list{display:flex;flex-direction:column;gap:4px}
+.um-perm-row{display:flex;align-items:center;gap:6px;padding:4px 8px;border-bottom:1px solid var(--brd)}
+.um-perm-row:last-child{border-bottom:0}
+.um-perm-table{flex:1;font-size:12px;color:var(--tx2)}
+.um-perm-badge{padding:2px 5px;border-radius:4px;font-size:9px;font-weight:600;color:#fff}
+.um-action-select{background:#22c55e}.um-action-insert{background:#3b82f6}.um-action-update{background:#eab308}.um-action-delete{background:#ef4444}.um-action-all{background:#6b7280}
 .um-empty{font-size:13px;color:var(--tx4);text-align:center;padding:16px 0}
 </style>
