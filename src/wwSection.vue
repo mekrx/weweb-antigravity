@@ -175,32 +175,37 @@ export default {
       this._pagesMap = {};
       try {
         if (typeof wwLib === 'undefined') return;
-        // Try every possible location for pages data
-        const sources = [
-          wwLib.wwWebsiteData?.pages,
-          wwLib.wwApp?.pages,
-          wwLib.$store?.getters?.['websiteData/getPages'],
-        ];
-        for (const src of sources) {
-          if (!src) continue;
-          // Array of pages
-          if (Array.isArray(src)) {
-            for (const p of src) {
-              if (p.id) this._pagesMap[p.id] = p.paths?.default || p.path || p.linkId || '';
-            }
-            if (Object.keys(this._pagesMap).length) return;
+        // Collect all possible page sources
+        const candidates = [];
+        try { if (wwLib.wwWebsiteData?.pages) candidates.push({ src: 'wwWebsiteData.pages', data: wwLib.wwWebsiteData.pages }); } catch(e){}
+        try { if (wwLib.wwApp?.pages) candidates.push({ src: 'wwApp.pages', data: wwLib.wwApp.pages }); } catch(e){}
+        try { if (wwLib.wwWebsiteData?.design?.pages) candidates.push({ src: 'design.pages', data: wwLib.wwWebsiteData.design.pages }); } catch(e){}
+        try {
+          // Try to find pages in the Vue app's store
+          const app = document.querySelector('#app')?.__vue_app__;
+          const store = app?.config?.globalProperties?.$store;
+          if (store) {
+            const sp = store.getters?.['websiteData/getPages'] || store.state?.websiteData?.pages;
+            if (sp) candidates.push({ src: 'vuex-store', data: sp });
           }
-          // Object keyed by id
-          if (typeof src === 'object') {
-            for (const [id, p] of Object.entries(src)) {
-              if (p && typeof p === 'object') {
-                this._pagesMap[id] = p.paths?.default || p.path || p.linkId || '';
-              }
-            }
-            if (Object.keys(this._pagesMap).length) return;
+        } catch(e){}
+
+        for (const { src, data } of candidates) {
+          if (!data) continue;
+          const entries = Array.isArray(data) ? data : (typeof data === 'object' ? Object.values(data) : []);
+          for (const p of entries) {
+            if (!p || typeof p !== 'object') continue;
+            const id = p.id || p.uid;
+            const path = p.paths?.default || p.path || p.linkId || p.slug || p.name || '';
+            if (id && path) this._pagesMap[id] = path;
+          }
+          if (Object.keys(this._pagesMap).length) {
+            console.log('[Menu] pages map built from', src, ':', Object.keys(this._pagesMap).length, 'pages');
+            return;
           }
         }
-      } catch (e) { console.warn('[Menu] _buildPagesMap:', e); }
+        console.warn('[Menu] No pages found. Candidates checked:', candidates.map(c => c.src));
+      } catch (e) { console.warn('[Menu] _buildPagesMap error:', e); }
     },
     _getPagePath(pageId) {
       if (!pageId) return null;
@@ -293,11 +298,21 @@ export default {
     navigateTo(link) {
       if (!link) return;
       try {
-        if (typeof wwLib !== 'undefined' && link.pageId) {
+        if (link.pageId && typeof wwLib !== 'undefined') {
           let qs = '';
           if (Array.isArray(link.query) && link.query.length) {
             qs = '?' + link.query.map(q => encodeURIComponent(q.name) + '=' + encodeURIComponent(q.value)).join('&');
           }
+          // Try to resolve page path
+          const path = this._getPagePath(link.pageId);
+          if (path) {
+            const url = path + (path.endsWith('/') ? '' : '/') + qs;
+            console.log('[Menu] navigating to path:', url);
+            window.location.href = url;
+            return;
+          }
+          // Fallback: goTo with pageId
+          console.warn('[Menu] path not found for', link.pageId, '— using goTo. Pages map:', JSON.stringify(this._pagesMap));
           const goTo = wwLib.wwApp?.goTo || wwLib.goTo;
           if (goTo) {
             goTo(link.pageId);
