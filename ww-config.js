@@ -11,6 +11,7 @@ export default {
             ['sidebarTitle', 'sidebarTitleSize'],
             ['showUserBlock', 'logoutLabel'],
             ['navIconSize'],
+            ['navSections'],
         ]
     },
     triggerEvents: [
@@ -164,7 +165,6 @@ export default {
                     ],
                 },
             ],
-            section: 'settings',
         },
     }
 };
