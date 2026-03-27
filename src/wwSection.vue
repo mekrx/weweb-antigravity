@@ -44,7 +44,7 @@
           <div v-else-if="item.type === 'separator' && isCollapsed && i > 0" class="nav-sep-line"></div>
 
           <!-- Regular item (show in collapsed too) -->
-          <button v-else-if="item.type === 'item' && !isSectionHidden(i)" class="nav-btn" :class="{ active: isNavActive(item) }" @click="onNavClick(item, i)" :title="isCollapsed ? item.label : undefined" :style="{ fontSize: content.navFontSize || '13px' }">
+          <button v-else-if="item.type === 'item' && !isSectionHidden(i)" class="nav-btn" :class="{ active: isNavActive(item) }" @click="onNavClick(item, i)" :data-tooltip="isCollapsed ? item.label : undefined" :style="{ fontSize: content.navFontSize || '13px' }">
             <span class="nav-icon" :style="{ width: content.navIconSize || '18px', height: content.navIconSize || '18px' }">
               <span v-if="resolvedIcons[i]" v-html="resolvedIcons[i]" class="icon-wrap"></span>
               <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
@@ -53,7 +53,7 @@
           </button>
 
           <!-- Child: show as icon-only in collapsed, full in expanded -->
-          <button v-else-if="item.type === 'child' && !isSectionHidden(i)" class="nav-child" :class="{ active: isNavActive(item), 'child-collapsed': isCollapsed }" @click="onNavClick(item, i)" :title="isCollapsed ? item.label : undefined" :style="{ fontSize: isCollapsed ? undefined : (content.navChildFontSize || '12px') }">
+          <button v-else-if="item.type === 'child' && !isSectionHidden(i)" class="nav-child" :class="{ active: isNavActive(item), 'child-collapsed': isCollapsed }" @click="onNavClick(item, i)" :data-tooltip="isCollapsed ? item.label : undefined" :style="{ fontSize: isCollapsed ? undefined : (content.navChildFontSize || '12px') }">
             <span v-if="resolvedIcons[i]" class="child-icon" :style="{ width: isCollapsed ? (content.navIconSize || '18px') : (content.navChildIconSize || '14px'), height: isCollapsed ? (content.navIconSize || '18px') : (content.navChildIconSize || '14px') }"><span v-html="resolvedIcons[i]" class="icon-wrap"></span></span>
             <span v-else-if="!isCollapsed" class="child-dot"></span>
             <span v-else class="child-dot-collapsed"></span>
@@ -67,7 +67,7 @@
       <div class="sb-spacer"></div>
 
       <!-- Theme -->
-      <button class="nav-btn theme-row" @click="toggleTheme" :title="isCollapsed ? (currentTheme === 'dark' ? 'Jasny motyw' : 'Ciemny motyw') : undefined">
+      <button class="nav-btn theme-row" @click="toggleTheme" :data-tooltip="isCollapsed ? (currentTheme === 'dark' ? 'Jasny motyw' : 'Ciemny motyw') : undefined">
         <span class="nav-icon" style="width:18px;height:18px">
           <svg v-if="currentTheme==='dark'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
           <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></svg>
@@ -76,19 +76,47 @@
       </button>
 
       <!-- User -->
-      <div v-if="content.showUserBlock !== false" class="user-block" :title="isCollapsed ? (userName || userEmail) : undefined">
-        <div class="user-avatar">{{ userInitials }}</div>
+      <div v-if="content.showUserBlock !== false" class="user-block" :data-tooltip="isCollapsed ? (userName || userEmail) : undefined" @click.self="showUserModal = true">
+        <div class="user-avatar" @click="showUserModal = true" style="cursor:pointer">{{ userInitials }}</div>
         <template v-if="!isCollapsed">
-          <div class="user-info">
+          <div class="user-info" @click="showUserModal = true" style="cursor:pointer">
             <div class="user-name">{{ userName || '—' }}</div>
             <div class="user-email">{{ userEmail || '—' }}</div>
           </div>
         </template>
-        <button class="logout-btn" @click="doLogout" :title="content.logoutLabel || 'Wyloguj'">
+        <button class="logout-btn" @click="doLogout" :data-tooltip="content.logoutLabel || 'Wyloguj'">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
         </button>
       </div>
     </aside>
+
+    <!-- User profile modal -->
+    <div v-if="showUserModal" class="um-overlay" @click.self="showUserModal = false">
+      <div class="um-modal">
+        <div class="um-header">
+          <div class="um-avatar-lg">{{ userInitials }}</div>
+          <div class="um-header-info">
+            <div class="um-name">{{ userName || '—' }}</div>
+            <div class="um-email">{{ userEmail || '—' }}</div>
+            <div v-if="userCreatedAt" class="um-meta">Konto od: {{ userCreatedAt }}</div>
+          </div>
+          <button class="um-close" @click="showUserModal = false">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+        <div v-if="userRoles.length" class="um-section">
+          <div class="um-section-title">Role</div>
+          <div class="um-roles"><span v-for="r in userRoles" :key="r" class="um-role-badge">{{ r }}</span></div>
+        </div>
+        <div v-if="userDepts.length" class="um-section">
+          <div class="um-section-title">Oddziały</div>
+          <div class="um-depts"><span v-for="d in userDepts" :key="d" class="um-dept-badge">{{ d }}</span></div>
+        </div>
+        <div v-if="!userRoles.length && !userDepts.length" class="um-section">
+          <div class="um-empty">Brak przypisanych ról i oddziałów</div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -103,7 +131,9 @@ export default {
       currentTheme: 'dark',
       sidebarCollapsed: false,
       collapsedSections: {},
-      supabase: null, userName: '', userEmail: '',
+      supabase: null, userName: '', userEmail: '', userCreatedAt: '',
+      userRoles: [], userDepts: [],
+      showUserModal: false,
       resolvedIcons: {},
       _initBusy: false,
       _pagesMap: null,
@@ -377,8 +407,22 @@ export default {
       try {
         const { data } = await this.supabase.auth.getUser();
         const u = data?.user;
-        if (u) { this.userName = u.user_metadata?.full_name || u.email?.split('@')[0] || ''; this.userEmail = u.email || ''; }
+        if (u) {
+          this.userName = u.user_metadata?.full_name || u.email?.split('@')[0] || '';
+          this.userEmail = u.email || '';
+          this.userCreatedAt = u.created_at ? new Date(u.created_at).toLocaleDateString('pl-PL') : '';
+          this.loadUserRoles(u.id);
+        }
       } catch (e) {}
+    },
+    async loadUserRoles(userId) {
+      if (!this.supabase || !userId) return;
+      try {
+        const { data: ur } = await this.supabase.from('users_roles').select('role').eq('user_id', userId);
+        if (ur) this.userRoles = ur.map(r => r.role);
+        const { data: ud } = await this.supabase.from('users_roles').select('oddzial:oddzialy(name)').eq('user_id', userId).not('oddzial_id', 'is', null);
+        if (ud) this.userDepts = [...new Set(ud.map(d => d.oddzial?.name).filter(Boolean))];
+      } catch (e) { console.warn('[Menu] loadUserRoles:', e); }
     },
     async doLogout() {
       this.$emit('trigger-event', { name: 'logout' });
@@ -426,7 +470,7 @@ export default {
 .sb-toggle{width:28px;height:28px;border-radius:6px;background:transparent;border:1px solid var(--brd);color:var(--tx3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 200ms var(--ease);flex-shrink:0}
 .sb-toggle:hover{border-color:var(--acc);color:var(--tx);background:var(--acc-h)}
 .sidebar.collapsed .sb-brand{justify-content:center;padding:20px 8px 16px}
-.sidebar.collapsed .sb-toggle{border-color:transparent}
+/* collapsed toggle keeps border visible */
 
 /* NAV */
 .sb-nav{padding:8px;display:flex;flex-direction:column;gap:1px}
@@ -446,10 +490,10 @@ export default {
 .nav-btn:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .sidebar.collapsed .nav-btn{justify-content:center;padding:10px}
 
-/* Theme row uses nav-btn class — same effects as all buttons */
-.theme-row{margin:0 0 4px;border:1px solid var(--brd);color:var(--tx3)}
+/* Theme row — same padding zone as nav via margin matching sb-nav padding */
+.theme-row{margin:0 8px 4px;border:1px solid var(--brd);color:var(--tx3)}
 .theme-row:hover{border-color:var(--acc);color:var(--tx);background:var(--acc-h)}
-.sidebar.collapsed .theme-row{border-color:transparent}
+.sidebar.collapsed .theme-row{margin:0 8px 4px}
 
 /* Icon */
 .nav-icon{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;opacity:.75;line-height:0}
@@ -495,4 +539,27 @@ export default {
 
 /* Mobile */
 @media(max-width:991px){.sidebar.mobileOpen .nav-label,.sidebar.mobileOpen .user-info,.sidebar.mobileOpen .sb-extra{opacity:1!important;width:auto!important}}
+
+/* Custom tooltips — fast, positioned right of sidebar */
+[data-tooltip]{position:relative}
+[data-tooltip]::after{content:attr(data-tooltip);position:absolute;left:100%;top:50%;transform:translateY(-50%);margin-left:8px;padding:5px 10px;border-radius:6px;background:var(--card,#1c1c20);color:var(--tx,#f0f0f0);font-size:12px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 120ms ease;z-index:10001;border:1px solid var(--brd,#27272a);box-shadow:0 2px 8px rgba(0,0,0,0.25)}
+[data-tooltip]:hover::after{opacity:1}
+
+/* User profile modal */
+.um-overlay{position:fixed;inset:0;background:var(--ov-bg);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;justify-content:center;align-items:center;z-index:10001;pointer-events:auto}
+.um-modal{background:var(--sb-bg);border:1px solid var(--brd);border-radius:12px;padding:24px;width:380px;max-width:90vw;max-height:85vh;overflow-y:auto;animation:fadeIn 200ms var(--ease)}
+.um-header{display:flex;align-items:center;gap:14px;margin-bottom:20px}
+.um-avatar-lg{width:48px;height:48px;border-radius:50%;background:var(--acc);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0}
+.um-header-info{flex:1;min-width:0}
+.um-name{font-size:16px;font-weight:700;color:var(--tx)}
+.um-email{font-size:12px;color:var(--tx3);margin-top:2px}
+.um-meta{font-size:11px;color:var(--tx4);margin-top:4px}
+.um-close{width:28px;height:28px;border-radius:6px;background:transparent;border:1px solid var(--brd);color:var(--tx3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 200ms;flex-shrink:0}
+.um-close:hover{border-color:var(--acc);color:var(--tx)}
+.um-section{margin-bottom:16px}
+.um-section-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--tx4);margin-bottom:8px}
+.um-roles,.um-depts{display:flex;flex-wrap:wrap;gap:6px}
+.um-role-badge{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;background:var(--n-active-bg);color:var(--n-active)}
+.um-dept-badge{padding:4px 10px;border-radius:6px;font-size:12px;background:var(--brd);color:var(--tx2)}
+.um-empty{font-size:13px;color:var(--tx4);text-align:center;padding:16px 0}
 </style>
