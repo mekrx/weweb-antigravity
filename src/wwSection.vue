@@ -5,13 +5,13 @@
     <header v-if="isMobile" class="topbar">
       <wwLayout path="menuToggleZone" direction="row" class="toggle-zone" />
       <div class="topbar-title" :style="{ fontSize: content.sidebarTitleSize || '16px' }">{{ content.sidebarTitle || '' }}</div>
-      <button class="tb-btn" @click="toggleTheme" :title="currentTheme === 'dark' ? 'Light mode' : 'Dark mode'">
+      <button class="tb-btn" @click="toggleTheme">
         <svg v-if="currentTheme==='dark'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
         <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></svg>
       </button>
     </header>
 
-    <!-- MOBILE OVERLAY -->
+    <!-- OVERLAY -->
     <transition name="ov">
       <div v-if="isMobile && content.isMobileMenuOpen" class="overlay" @click="closeMobile" @touchmove.prevent @wheel.prevent />
     </transition>
@@ -21,22 +21,51 @@
       <!-- Brand -->
       <div class="sb-brand">
         <div v-if="!isCollapsed" class="sb-title" :style="{ fontSize: content.sidebarTitleSize || '16px' }">{{ content.sidebarTitle || '' }}</div>
-        <button v-if="!isMobile" class="sb-toggle" @click="toggleCollapse" :title="isCollapsed ? 'Expand' : 'Collapse'">
+        <button v-if="!isMobile" class="sb-toggle" @click="toggleCollapse">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path :d="isCollapsed ? 'm9 18 6-6-6-6' : 'm15 18-6-6 6-6'"/></svg>
         </button>
       </div>
 
-      <!-- Navigation -->
+      <!-- Nav sections -->
       <nav class="sb-nav">
-        <button v-for="(item, i) in navItems" :key="i" class="nav-btn" :class="{ active: isNavActive(item) }" @click="onNavClick(item, i)" :title="isCollapsed ? item.label : undefined">
-          <span class="nav-icon" :style="{ width: content.navIconSize || '18px', height: content.navIconSize || '18px' }">
-            <span v-if="resolvedIcons['nav'+(i+1)]" v-html="resolvedIcons['nav'+(i+1)]" class="nav-icon-svg"></span>
-            <template v-else>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
-            </template>
-          </span>
-          <span v-if="!isCollapsed" class="nav-label">{{ item.label }}</span>
-        </button>
+        <template v-for="(section, si) in navSections" :key="si">
+          <!-- Section label -->
+          <div v-if="section.sectionLabel && !isCollapsed" class="nav-section-label">{{ section.sectionLabel }}</div>
+          <div v-else-if="section.sectionLabel && isCollapsed && si > 0" class="nav-section-divider"></div>
+
+          <!-- Items -->
+          <template v-for="(item, ii) in (section.items || [])" :key="si+'-'+ii">
+            <!-- Main nav button -->
+            <button
+              class="nav-btn"
+              :class="{ active: isNavActive(item), 'has-children': item.children && item.children.length }"
+              @click="onNavClick(item, si, ii)"
+              :title="isCollapsed ? item.label : undefined"
+            >
+              <span class="nav-icon" :style="{ width: content.navIconSize || '18px', height: content.navIconSize || '18px' }">
+                <span v-if="getResolvedIcon(si, ii)" v-html="getResolvedIcon(si, ii)" class="icon-wrap"></span>
+                <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
+              </span>
+              <span v-if="!isCollapsed" class="nav-label">{{ item.label }}</span>
+              <!-- Expand arrow for items with children -->
+              <svg v-if="!isCollapsed && item.children && item.children.length" class="nav-arrow" :class="{ open: isExpanded(si, ii) }" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+
+            <!-- Sub-items -->
+            <div v-if="!isCollapsed && item.children && item.children.length && isExpanded(si, ii)" class="nav-children">
+              <button
+                v-for="(child, ci) in item.children"
+                :key="ci"
+                class="nav-child"
+                :class="{ active: isChildActive(child) }"
+                @click="onChildClick(child, si, ii, ci)"
+              >
+                <span class="nav-child-dot"></span>
+                <span class="nav-label">{{ child.label }}</span>
+              </button>
+            </div>
+          </template>
+        </template>
       </nav>
 
       <!-- Extra dropzone -->
@@ -80,6 +109,7 @@ export default {
       windowWidth: typeof window !== 'undefined' ? window.innerWidth : 1200,
       currentTheme: 'dark',
       sidebarCollapsed: false,
+      expandedItems: {},
       supabase: null, userName: '', userEmail: '',
       resolvedIcons: {},
       _initBusy: false,
@@ -95,14 +125,7 @@ export default {
         mobileHidden: this.isMobile && !this.content.isMobileMenuOpen,
       };
     },
-    navItems() {
-      const items = [];
-      for (let i = 1; i <= 8; i++) {
-        const label = this.content[`nav${i}Label`];
-        if (label) items.push({ label, icon: this.content[`nav${i}Icon`], link: this.content[`nav${i}Link`], idx: i });
-      }
-      return items;
-    },
+    navSections() { return this.content.navSections || []; },
     userInitials() {
       if (!this.userName) return '?';
       return this.userName.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
@@ -127,15 +150,7 @@ export default {
     'content.supabaseUrl'() { this.initSupa(); },
     'content.supabaseAnonKey'() { this.initSupa(); },
     'content.theme'(v) { if (v && v !== this.currentTheme) this.setTheme(v); },
-    // Watch icon changes
-    'content.nav1Icon'() { this.resolveNavIcon(1); },
-    'content.nav2Icon'() { this.resolveNavIcon(2); },
-    'content.nav3Icon'() { this.resolveNavIcon(3); },
-    'content.nav4Icon'() { this.resolveNavIcon(4); },
-    'content.nav5Icon'() { this.resolveNavIcon(5); },
-    'content.nav6Icon'() { this.resolveNavIcon(6); },
-    'content.nav7Icon'() { this.resolveNavIcon(7); },
-    'content.nav8Icon'() { this.resolveNavIcon(8); },
+    'content.navSections': { handler() { this.resolveAllIcons(); }, deep: true },
   },
   mounted() {
     this.sidebarCollapsed = !!this.content?.isSidebarCollapsed;
@@ -146,7 +161,7 @@ export default {
     this.checkScroll();
     this.updateLayout();
     this.initSupa();
-    this.resolveAllNavIcons();
+    this.resolveAllIcons();
     setTimeout(() => { if (!this.supabase) this.initSupa(); }, 1500);
   },
   unmounted() {
@@ -157,11 +172,9 @@ export default {
     document.body.style.paddingTop = '';
   },
   methods: {
-    /* ── Icon resolution (same pattern as admin panel) ── */
-    async resolveNavIcon(n) {
-      const val = this.content[`nav${n}Icon`];
-      const key = 'nav' + n;
-      if (!val) { this.resolvedIcons[key] = ''; return; }
+    /* ── Icons (wwLib.useIcons pattern from admin panel) ── */
+    async resolveIcon(key, val) {
+      if (!val) { this.resolvedIcons = { ...this.resolvedIcons, [key]: '' }; return; }
       try {
         if (typeof wwLib !== 'undefined' && wwLib.useIcons) {
           const { getIcon } = wwLib.useIcons();
@@ -177,43 +190,76 @@ export default {
         this.resolvedIcons = { ...this.resolvedIcons, [key]: '' };
       }
     },
-    resolveAllNavIcons() {
-      for (let i = 1; i <= 8; i++) this.resolveNavIcon(i);
+    resolveAllIcons() {
+      const sections = this.navSections;
+      for (let si = 0; si < sections.length; si++) {
+        const items = sections[si].items || [];
+        for (let ii = 0; ii < items.length; ii++) {
+          const key = `icon_${si}_${ii}`;
+          this.resolveIcon(key, items[ii].icon);
+        }
+      }
+    },
+    getResolvedIcon(si, ii) {
+      return this.resolvedIcons[`icon_${si}_${ii}`] || '';
+    },
+
+    /* ── Expand/collapse sub-items ── */
+    isExpanded(si, ii) { return !!this.expandedItems[`${si}_${ii}`]; },
+    toggleExpand(si, ii) {
+      const key = `${si}_${ii}`;
+      this.expandedItems = { ...this.expandedItems, [key]: !this.expandedItems[key] };
     },
 
     /* ── Navigation ── */
     isNavActive(item) {
       if (!item.link) return false;
       try {
-        // Check by pageId
         if (item.link.pageId && typeof wwLib !== 'undefined') {
-          const currentPageId = wwLib?.wwWebsiteData?.page?.id;
-          if (currentPageId && item.link.pageId === currentPageId) return true;
+          const cur = wwLib?.wwWebsiteData?.page?.id;
+          if (cur && item.link.pageId === cur) return true;
         }
-        // Fallback: check by URL path
         const p = window.location.pathname;
         if (item.link.href) return p === item.link.href || p.startsWith(item.link.href + '/');
       } catch (e) {}
       return false;
     },
-    onNavClick(item, i) {
-      this.$emit('trigger-event', { name: 'navClick', event: { url: item.link?.href || '', label: item.label, index: i } });
+    isChildActive(child) {
+      if (!child.link) return false;
+      try {
+        if (child.link.pageId && typeof wwLib !== 'undefined') {
+          const cur = wwLib?.wwWebsiteData?.page?.id;
+          if (cur && child.link.pageId === cur) return true;
+        }
+        const p = window.location.pathname;
+        if (child.link.href) return p === child.link.href || p.startsWith(child.link.href + '/');
+      } catch (e) {}
+      return false;
+    },
+    onNavClick(item, si, ii) {
+      // If has children, toggle expand
+      if (item.children && item.children.length) {
+        this.toggleExpand(si, ii);
+        // If also has a link, navigate
+        if (item.link) this.navigateTo(item.link);
+        return;
+      }
+      this.$emit('trigger-event', { name: 'navClick', event: { url: item.link?.href || '', label: item.label, sectionKey: `${si}_${ii}` } });
       if (this.isMobile) this.closeMobile();
-      // Navigate using WeWeb link
-      const link = item.link;
+      if (item.link) this.navigateTo(item.link);
+    },
+    onChildClick(child, si, ii, ci) {
+      this.$emit('trigger-event', { name: 'navClick', event: { url: child.link?.href || '', label: child.label, sectionKey: `${si}_${ii}_${ci}` } });
+      if (this.isMobile) this.closeMobile();
+      if (child.link) this.navigateTo(child.link);
+    },
+    navigateTo(link) {
       if (!link) return;
       try {
         if (typeof wwLib !== 'undefined') {
-          if (link.pageId) {
-            wwLib.goTo(link.pageId, link.parameters, link.query);
-            return;
-          }
-          if (link.href) {
-            wwLib.goTo(link.href);
-            return;
-          }
+          if (link.pageId) { wwLib.goTo(link.pageId, link.parameters, link.query); return; }
+          if (link.href) { wwLib.goTo(link.href); return; }
         }
-        // Fallback
         if (link.type === 'external' && link.href) {
           window.open(link.href, link.targetBlank ? '_blank' : '_self');
         } else if (link.href) {
@@ -304,7 +350,7 @@ export default {
 .nav-shell[data-theme="dark"] {
   --bg:#111113; --raised:#18181b; --card:#1c1c20;
   --brd:#27272a; --brd-l:rgba(255,255,255,0.04);
-  --tx:#ececec; --tx2:#a1a1aa; --tx3:#71717a;
+  --tx:#ececec; --tx2:#a1a1aa; --tx3:#71717a; --tx4:#52525b;
   --acc:#4B8765; --acc-h:rgba(75,135,101,0.10);
   --sb-bg:#141416; --tb-bg:rgba(20,20,22,0.88);
   --ov-bg:rgba(0,0,0,0.6);
@@ -320,7 +366,7 @@ export default {
 .nav-shell[data-theme="light"] {
   --bg:#f8f9fa; --raised:#fff; --card:#fff;
   --brd:#e4e4e7; --brd-l:#f4f4f5;
-  --tx:#18181b; --tx2:#52525b; --tx3:#71717a;
+  --tx:#18181b; --tx2:#52525b; --tx3:#71717a; --tx4:#a1a1aa;
   --acc:#4B8765; --acc-h:rgba(75,135,101,0.08);
   --sb-bg:#fff; --tb-bg:rgba(255,255,255,0.88);
   --ov-bg:rgba(0,0,0,0.32);
@@ -365,8 +411,14 @@ export default {
 .sidebar.collapsed .sb-brand { justify-content:center; padding:20px 8px 16px; }
 .sidebar.collapsed .sb-toggle { border-color:transparent; }
 
-/* Nav (matching admin panel) */
+/* ═══ NAV ═══ */
 .sb-nav { padding:8px; display:flex; flex-direction:column; gap:1px; }
+
+/* Section labels & dividers */
+.nav-section-label { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.8px; color:var(--tx4); padding:16px 12px 6px; }
+.nav-section-divider { height:1px; background:var(--brd); margin:8px 12px; }
+
+/* Nav button */
 .nav-btn { display:flex; align-items:center; gap:10px; width:100%; padding:10px 12px; background:transparent; border:0; border-radius:8px; cursor:pointer; color:var(--n-muted); font-size:13px; font-family:var(--font); text-align:left; transition:all 200ms var(--ease); white-space:nowrap; overflow:hidden; }
 .nav-btn:hover { background:var(--n-hover); color:var(--tx); }
 .nav-btn.active { background:var(--n-active-bg); color:var(--n-active); font-weight:600; }
@@ -376,10 +428,22 @@ export default {
 /* Nav icon */
 .nav-icon { flex-shrink:0; display:inline-flex; align-items:center; justify-content:center; opacity:.7; line-height:0; }
 .nav-btn.active .nav-icon { opacity:1; }
-.nav-icon-svg { display:inline-flex; align-items:center; justify-content:center; width:100%; height:100%; line-height:0; }
-.nav-icon-svg :deep(svg) { width:100%; height:100%; }
-.nav-icon-svg :deep(img) { width:100%; height:100%; object-fit:contain; }
-.nav-label { overflow:hidden; text-overflow:ellipsis; }
+.icon-wrap { display:inline-flex; align-items:center; justify-content:center; width:100%; height:100%; line-height:0; }
+.icon-wrap :deep(svg) { width:100%; height:100%; }
+.icon-wrap :deep(img) { width:100%; height:100%; object-fit:contain; }
+.nav-label { overflow:hidden; text-overflow:ellipsis; flex:1; }
+
+/* Expand arrow */
+.nav-arrow { flex-shrink:0; opacity:.5; transition:transform 200ms var(--ease); margin-left:auto; }
+.nav-arrow.open { transform:rotate(180deg); }
+
+/* Sub-items */
+.nav-children { padding:2px 0 2px 0; }
+.nav-child { display:flex; align-items:center; gap:8px; width:100%; padding:7px 12px 7px 22px; background:transparent; border:0; border-radius:6px; cursor:pointer; color:var(--tx4); font-size:12px; font-family:var(--font); text-align:left; transition:all 200ms var(--ease); white-space:nowrap; overflow:hidden; }
+.nav-child:hover { background:var(--n-hover); color:var(--tx); }
+.nav-child.active { color:var(--n-active); font-weight:600; }
+.nav-child-dot { width:4px; height:4px; border-radius:50%; background:var(--tx4); flex-shrink:0; transition:background 200ms; }
+.nav-child.active .nav-child-dot { background:var(--n-active); }
 
 /* Extra */
 .sb-extra { padding:0 8px; }

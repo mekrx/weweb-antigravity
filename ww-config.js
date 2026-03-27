@@ -10,14 +10,6 @@ export default {
             ['animationDuration'],
             ['sidebarTitle', 'sidebarTitleSize'],
             ['showUserBlock', 'logoutLabel'],
-            ['nav1Label', 'nav1Icon', 'nav1Link'],
-            ['nav2Label', 'nav2Icon', 'nav2Link'],
-            ['nav3Label', 'nav3Icon', 'nav3Link'],
-            ['nav4Label', 'nav4Icon', 'nav4Link'],
-            ['nav5Label', 'nav5Icon', 'nav5Link'],
-            ['nav6Label', 'nav6Icon', 'nav6Link'],
-            ['nav7Label', 'nav7Icon', 'nav7Link'],
-            ['nav8Label', 'nav8Icon', 'nav8Link'],
             ['navIconSize'],
         ]
     },
@@ -25,7 +17,7 @@ export default {
         { name: 'overlayClick', label: { en: 'On overlay click (close mobile menu)' }, event: {} },
         { name: 'themeChange', label: { en: 'On theme toggle' }, event: { theme: '' } },
         { name: 'logout', label: { en: 'On logout click' }, event: {} },
-        { name: 'navClick', label: { en: 'On nav item click' }, event: { url: '', label: '', index: 0 } },
+        { name: 'navClick', label: { en: 'On nav item click' }, event: { url: '', label: '', sectionKey: '' } },
         { name: 'collapseToggle', label: { en: 'On sidebar collapse/expand' }, event: { collapsed: false } },
     ],
     properties: {
@@ -60,37 +52,119 @@ export default {
         // Nav icon size
         navIconSize: { label: { en: 'Nav icon size' }, type: 'Length', options: { unitChoices: [{ value: 'px', label: 'px', min: 10, max: 32 }] }, defaultValue: '18px', bindable: true, responsive: true },
 
-        // === NAV ITEMS 1-8: Label + SystemIcon + Link ===
-        nav1Label: { label: { en: 'Nav 1 — Label' }, type: 'Text', defaultValue: 'Dashboard', bindable: true },
-        nav1Icon: { label: { en: 'Nav 1 — Icon' }, type: 'SystemIcon', bindable: true },
-        nav1Link: { label: { en: 'Nav 1 — Link' }, type: 'Link', bindable: true },
-
-        nav2Label: { label: { en: 'Nav 2 — Label' }, type: 'Text', defaultValue: 'Panel admina', bindable: true },
-        nav2Icon: { label: { en: 'Nav 2 — Icon' }, type: 'SystemIcon', bindable: true },
-        nav2Link: { label: { en: 'Nav 2 — Link' }, type: 'Link', bindable: true },
-
-        nav3Label: { label: { en: 'Nav 3 — Label' }, type: 'Text', defaultValue: 'Klienci', bindable: true },
-        nav3Icon: { label: { en: 'Nav 3 — Icon' }, type: 'SystemIcon', bindable: true },
-        nav3Link: { label: { en: 'Nav 3 — Link' }, type: 'Link', bindable: true },
-
-        nav4Label: { label: { en: 'Nav 4 — Label' }, type: 'Text', defaultValue: '', bindable: true },
-        nav4Icon: { label: { en: 'Nav 4 — Icon' }, type: 'SystemIcon', bindable: true },
-        nav4Link: { label: { en: 'Nav 4 — Link' }, type: 'Link', bindable: true },
-
-        nav5Label: { label: { en: 'Nav 5 — Label' }, type: 'Text', defaultValue: '', bindable: true },
-        nav5Icon: { label: { en: 'Nav 5 — Icon' }, type: 'SystemIcon', bindable: true },
-        nav5Link: { label: { en: 'Nav 5 — Link' }, type: 'Link', bindable: true },
-
-        nav6Label: { label: { en: 'Nav 6 — Label' }, type: 'Text', defaultValue: '', bindable: true },
-        nav6Icon: { label: { en: 'Nav 6 — Icon' }, type: 'SystemIcon', bindable: true },
-        nav6Link: { label: { en: 'Nav 6 — Link' }, type: 'Link', bindable: true },
-
-        nav7Label: { label: { en: 'Nav 7 — Label' }, type: 'Text', defaultValue: '', bindable: true },
-        nav7Icon: { label: { en: 'Nav 7 — Icon' }, type: 'SystemIcon', bindable: true },
-        nav7Link: { label: { en: 'Nav 7 — Link' }, type: 'Link', bindable: true },
-
-        nav8Label: { label: { en: 'Nav 8 — Label' }, type: 'Text', defaultValue: '', bindable: true },
-        nav8Icon: { label: { en: 'Nav 8 — Icon' }, type: 'SystemIcon', bindable: true },
-        nav8Link: { label: { en: 'Nav 8 — Link' }, type: 'Link', bindable: true },
+        // === NAV SECTIONS (Array with Add/Remove) ===
+        navSections: {
+            label: { en: 'Navigation sections' },
+            type: 'Array',
+            bindable: true,
+            options: {
+                movable: true,
+                expandable: true,
+                getItemLabel(item, index) {
+                    return item.sectionLabel || `Section ${index + 1}`;
+                },
+                item: {
+                    type: 'Object',
+                    defaultValue: { sectionLabel: '', items: [] },
+                    options: {
+                        item: {
+                            sectionLabel: {
+                                label: { en: 'Section label' },
+                                type: 'Text',
+                            },
+                            items: {
+                                label: { en: 'Items' },
+                                type: 'Array',
+                                options: {
+                                    movable: true,
+                                    expandable: true,
+                                    getItemLabel(item, index) {
+                                        return item.label || `Item ${index + 1}`;
+                                    },
+                                    item: {
+                                        type: 'Object',
+                                        defaultValue: { label: '', icon: null, link: null, children: [] },
+                                        options: {
+                                            item: {
+                                                label: {
+                                                    label: { en: 'Label' },
+                                                    type: 'Text',
+                                                },
+                                                icon: {
+                                                    label: { en: 'Icon' },
+                                                    type: 'SystemIcon',
+                                                },
+                                                link: {
+                                                    label: { en: 'Link' },
+                                                    type: 'Link',
+                                                },
+                                                children: {
+                                                    label: { en: 'Sub-items' },
+                                                    type: 'Array',
+                                                    options: {
+                                                        movable: true,
+                                                        expandable: true,
+                                                        getItemLabel(item, index) {
+                                                            return item.label || `Sub ${index + 1}`;
+                                                        },
+                                                        item: {
+                                                            type: 'Object',
+                                                            defaultValue: { label: '', link: null },
+                                                            options: {
+                                                                item: {
+                                                                    label: {
+                                                                        label: { en: 'Label' },
+                                                                        type: 'Text',
+                                                                    },
+                                                                    link: {
+                                                                        label: { en: 'Link' },
+                                                                        type: 'Link',
+                                                                    },
+                                                                },
+                                                            },
+                                                        },
+                                                    },
+                                                    defaultValue: [],
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                                defaultValue: [],
+                            },
+                        },
+                    },
+                },
+            },
+            defaultValue: [
+                {
+                    sectionLabel: '',
+                    items: [
+                        { label: 'Dashboard', icon: null, link: null, children: [] },
+                    ],
+                },
+                {
+                    sectionLabel: 'Administracja',
+                    items: [
+                        {
+                            label: 'Panel admina', icon: null, link: null,
+                            children: [
+                                { label: 'Dashboard', link: null },
+                                { label: 'Użytkownicy', link: null },
+                                { label: 'Role', link: null },
+                                { label: 'Audyt', link: null },
+                            ],
+                        },
+                    ],
+                },
+                {
+                    sectionLabel: 'CRM',
+                    items: [
+                        { label: 'Klienci', icon: null, link: null, children: [] },
+                    ],
+                },
+            ],
+            section: 'settings',
+        },
     }
 };
